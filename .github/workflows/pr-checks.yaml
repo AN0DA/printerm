@@ -31,7 +31,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.13'
 
       - name: Setup Poetry
         uses: abatilo/actions-poetry@v3
@@ -43,20 +43,20 @@ jobs:
         id: ruff-linter
         if: always()
         run: |
-          poetry run ruff check --config pyproject.toml --output-format=json tp/ test/ > ruff_report.json
-          poetry run ruff check --config pyproject.toml --output-format=github --exit-non-zero-on-fix tp/ test/
+          poetry run ruff check --config pyproject.toml --output-format=json printerm/ test/ > ruff_report.json
+          poetry run ruff check --config pyproject.toml --output-format=github --exit-non-zero-on-fix printerm/ test/
 
       - name: Ruff formatter check
         id: ruff-formatter
         if: always()
-        run: poetry run ruff format --config pyproject.toml --check tp/ test/
+        run: poetry run ruff format --config pyproject.toml --check printerm/ test/
 
       - name: Bandit check
         id: bandit
         if: always()
         run: |
-          poetry run bandit -c pyproject.toml -r -o bandit_report.json -f json tp/
-          poetry run bandit -c pyproject.toml -r -f screen tp/
+          poetry run bandit -c pyproject.toml -r -o bandit_report.json -f json printerm/
+          poetry run bandit -c pyproject.toml -r -f screen printerm/
 
       - name: Upload artifacts
         if: always()
@@ -89,8 +89,8 @@ jobs:
         id: mypy
         if: always()
         run: |
-          poetry run mypy --junit-xml mypy_report.xml tp/ test/
-          poetry run mypy tp/ test/
+          poetry run mypy --junit-xml mypy_report.xml printerm/ test/
+          poetry run mypy printerm/ test/
 
       - name: Upload artifacts
         if: always()

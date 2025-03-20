@@ -1,4 +1,4 @@
-# tp Module
+# printerm Module
 
 This directory contains the main source code for the Thermal Printer Application.
 
@@ -24,7 +24,7 @@ The main CLI application that provides various commands to interact with the pri
 
 ### config.py
 
-Handles reading and writing configuration settings from `tp_config.ini`.
+Handles reading and writing configuration settings from `printerm_config.ini`.
 
 ### gui.py
 
@@ -48,6 +48,6 @@ A Flask web application that provides a web interface to the application.
 
 ## How to Add New Modules
 
-1. Create a new `.py` file in the `tp/` directory.
+1. Create a new `.py` file in the `printerm/` directory.
 2. Ensure you follow the existing code style and structure.
 3. Update `__init__.py` if necessary to expose new modules.

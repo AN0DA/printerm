@@ -4,25 +4,25 @@ from unittest.mock import MagicMock, patch
 import pytest
 from typer.testing import CliRunner
 
-from tp.app import app
+from printerm.app import app
 
 runner = CliRunner()
 
 
 @pytest.fixture
 def mock_printer() -> Generator[MagicMock, None, None]:
-    with patch("tp.app.ThermalPrinter") as mock_printer_class:
+    with patch("printerm.app.ThermalPrinter") as mock_printer_class:
         yield mock_printer_class
 
 
 @pytest.fixture
 def mock_get_printer_ip() -> Generator[None, None, None]:
-    with patch("tp.app.get_printer_ip", return_value="192.168.1.100"):
+    with patch("printerm.app.get_printer_ip", return_value="192.168.1.100"):
         yield
 
 
 def test_print_template_command(mock_printer: MagicMock, mock_get_printer_ip: None) -> None:
-    with patch("tp.app.TemplateManager") as mock_template_manager:
+    with patch("printerm.app.TemplateManager") as mock_template_manager:
         mock_template_manager.return_value.get_template.return_value = {
             "name": "Sample",
             "variables": [{"name": "title", "description": "Title"}],
@@ -35,11 +35,11 @@ def test_print_template_command(mock_printer: MagicMock, mock_get_printer_ip: No
 
 
 def test_update_command(mocker: MagicMock) -> None:
-    mock_subprocess = mocker.patch("tp.app.subprocess.check_call")
+    mock_subprocess = mocker.patch("printerm.app.subprocess.check_call")
     result = runner.invoke(app, ["update"])
     assert result.exit_code == 0
     mock_subprocess.assert_called_with(
-        [mocker.ANY, "-m", "pip", "install", "--upgrade", "git+https://github.com/AN0DA/tp.git"]
+        [mocker.ANY, "-m", "pip", "install", "--upgrade", "git+https://github.com/AN0DA/printerm.git"]
     )
     assert "Application updated successfully." in result.output
 

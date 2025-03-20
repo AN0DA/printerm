@@ -5,7 +5,7 @@ from flask import Flask, flash, redirect, render_template, request, url_for
 from waitress import serve
 from werkzeug.wrappers import Response
 
-from tp.config import (
+from printerm.config import (
     PRINT_TEMPLATE_FOLDER,
     get_chars_per_line,
     get_check_for_updates,
@@ -17,9 +17,9 @@ from tp.config import (
     set_enable_special_letters,
     set_printer_ip,
 )
-from tp.printer import ThermalPrinter
-from tp.template_manager import TemplateManager
-from tp.utils import compute_agenda_variables
+from printerm.printer import ThermalPrinter
+from printerm.template_manager import TemplateManager
+from printerm.utils import compute_agenda_variables
 
 logger = logging.getLogger(__name__)
 

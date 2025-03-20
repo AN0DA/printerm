@@ -9,9 +9,9 @@ from mistune import Markdown
 from packaging import version
 from unidecode import unidecode
 
-from tp.config import get_chars_per_line, get_enable_special_letters
-from tp.markdown_renderer import PrinterRenderer
-from tp.template_manager import TemplateManager
+from printerm.config import get_chars_per_line, get_enable_special_letters
+from printerm.markdown_renderer import PrinterRenderer
+from printerm.template_manager import TemplateManager
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +102,7 @@ def compute_agenda_variables() -> dict[str, Any]:
 
 
 def get_latest_version() -> str:
-    url = "https://api.github.com/repos/AN0DA/tp/releases/latest"
+    url = "https://api.github.com/repos/AN0DA/printerm/releases/latest"
     response = requests.get(url, timeout=5)
     if response.status_code == 200:
         data = response.json()

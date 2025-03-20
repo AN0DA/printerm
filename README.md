@@ -39,7 +39,7 @@ Welcome to the Thermal Printer Application! This project provides a flexible and
 You can install the Thermal Printer Application directly from GitHub:
 
 ```bash
-pip install git+https://github.com/AN0DA/tp.git
+pip install git+https://github.com/AN0DA/printerm.git
 ```
 
 #### Requirements
@@ -53,10 +53,10 @@ pip install git+https://github.com/AN0DA/tp.git
 
 #### Command-Line Interface
 
-After installation, you can use the tp command:
+After installation, you can use the printerm command:
 
 ```bash
-tp --help
+printerm --help
 ```
 
 ##### Printing a Template

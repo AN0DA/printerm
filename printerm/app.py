@@ -6,8 +6,8 @@ import sys
 import click
 import typer
 
-from tp import __version__
-from tp.config import (
+from printerm import __version__
+from printerm.config import (
     CONFIG_FILE,
     PRINT_TEMPLATE_FOLDER,
     get_chars_per_line,
@@ -19,9 +19,9 @@ from tp.config import (
     set_enable_special_letters,
     set_printer_ip,
 )
-from tp.printer import ThermalPrinter
-from tp.template_manager import TemplateManager
-from tp.utils import compute_agenda_variables, is_new_version_available
+from printerm.printer import ThermalPrinter
+from printerm.template_manager import TemplateManager
+from printerm.utils import compute_agenda_variables, is_new_version_available
 
 logging.basicConfig(
     level=logging.INFO,
@@ -51,12 +51,12 @@ def check_for_updates_on_startup() -> None:
             if update:
                 perform_update()
             else:
-                typer.echo("You can update later by running 'tp update' command.")
+                typer.echo("You can update later by running 'printerm update' command.")
 
 
 def perform_update() -> None:
     try:
-        cmd = [sys.executable, "-m", "pip", "install", "--upgrade", "git+https://github.com/AN0DA/tp.git"]
+        cmd = [sys.executable, "-m", "pip", "install", "--upgrade", "git+https://github.com/AN0DA/printerm.git"]
         typer.echo("Updating the application...")
 
         # Check for user permissions
@@ -186,9 +186,9 @@ def gui() -> None:
     Launch the GUI version of the application.
     """
     try:
-        import tp.gui
+        import printerm.gui
 
-        tp.gui.main()
+        printerm.gui.main()
     except ImportError as e:
         typer.echo("Failed to launch GUI. PyQt6 might not be installed.")
         typer.echo("Install it using 'pip install PyQt6'")
@@ -202,9 +202,9 @@ def web() -> None:
     Launch the web server with the web interface.
     """
     try:
-        import tp.web_app
+        import printerm.web_app
 
-        tp.web_app.main()
+        printerm.web_app.main()
     except ImportError as e:
         typer.echo("Failed to launch web interface. Flask might not be installed.")
         typer.echo("Install it using 'pip install Flask'")

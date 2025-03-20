@@ -6,7 +6,7 @@ from collections.abc import Generator
 
 import pytest
 
-from tp import config
+from printerm import config
 
 CONFIG_FILE = config.CONFIG_FILE
 

@@ -1,7 +1,7 @@
 import configparser
 import os
 
-CONFIG_FILE = "tp_config.ini"
+CONFIG_FILE = "printerm_config.ini"
 
 PRINT_TEMPLATE_FOLDER = os.path.join(os.path.dirname(os.path.realpath(__file__)), "print_templates")
 
