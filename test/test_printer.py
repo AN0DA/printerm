@@ -4,13 +4,13 @@ from unittest.mock import MagicMock, call, patch
 
 import pytest
 
-from tp.printer import ThermalPrinter
-from tp.template_manager import TemplateManager
+from printerm.printer import ThermalPrinter
+from printerm.template_manager import TemplateManager
 
 
 @pytest.fixture
 def mock_network_printer() -> Generator[MagicMock, None, None]:
-    with patch("tp.printer.Network") as mock_network:
+    with patch("printerm.printer.Network") as mock_network:
         yield mock_network
 
 
@@ -79,7 +79,9 @@ segments:
 
 def test_printer_connection_error(template_manager: TemplateManager) -> None:
     # Simulate a connection error
-    with patch("tp.printer.Network", side_effect=Exception("Connection error")), pytest.raises(
-        Exception, match="Connection error"
-    ), ThermalPrinter("192.168.1.100", template_manager):
+    with (
+        patch("printerm.printer.Network", side_effect=Exception("Connection error")),
+        pytest.raises(Exception, match="Connection error"),
+        ThermalPrinter("192.168.1.100", template_manager),
+    ):
         pass

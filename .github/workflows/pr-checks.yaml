@@ -28,44 +28,29 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
 
-      - name: Setup Poetry
-        uses: abatilo/actions-poetry@v3
+      - name: Set up Python
+        run: uv python install
 
-      - name: Install Python dependencies
-        run: poetry install
+      - name: Install the project
+        run: uv sync --all-extras --dev
 
       - name: Ruff linter check
         id: ruff-linter
         if: always()
-        run: |
-          poetry run ruff check --config pyproject.toml --output-format=json tp/ test/ > ruff_report.json
-          poetry run ruff check --config pyproject.toml --output-format=github --exit-non-zero-on-fix tp/ test/
+        run: uv run ruff check --config pyproject.toml --output-format=github --exit-non-zero-on-fix printerm/ test/
 
       - name: Ruff formatter check
         id: ruff-formatter
         if: always()
-        run: poetry run ruff format --config pyproject.toml --check tp/ test/
+        run: uv run ruff format --config pyproject.toml --check printerm/ test/
 
       - name: Bandit check
         id: bandit
         if: always()
-        run: |
-          poetry run bandit -c pyproject.toml -r -o bandit_report.json -f json tp/
-          poetry run bandit -c pyproject.toml -r -f screen tp/
-
-      - name: Upload artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: linter-artifacts
-          path: |
-            ruff_report.json
-            bandit_report.json
+        run: uv run bandit -c pyproject.toml -r -f screen printerm/
 
   Mypy:
     name: Mypy
@@ -74,31 +59,19 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
 
-      - name: Setup Poetry
-        uses: abatilo/actions-poetry@v3
+      - name: Set up Python
+        run: uv python install
 
-      - name: Install Python dependencies
-        run: poetry install
+      - name: Install the project
+        run: uv sync --all-extras --dev
 
       - name: Mypy check
         id: mypy
         if: always()
-        run: |
-          poetry run mypy --junit-xml mypy_report.xml tp/ test/
-          poetry run mypy tp/ test/
-
-      - name: Upload artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: mypy-artifacts
-          path: |
-            mypy_report.xml
+        run: uv run mypy printerm/ test/
 
   Test:
     name: Python tests
@@ -116,19 +89,17 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
 
-      - name: Setup Poetry
-        uses: abatilo/actions-poetry@v3
+      - name: Set up Python
+        run: uv python install
 
-      - name: Install Python dependencies
-        run: poetry install
+      - name: Install the project
+        run: uv sync --all-extras --dev
 
       - name: Run Python tests
-        run: poetry run coverage run -m pytest --junitxml=./test_results.xml
+        run: uv run coverage run -m pytest --junitxml=./test_results.xml
 
       - name: Publish test results to GitHub
         uses: EnricoMi/publish-unit-test-result-action@v2
@@ -137,54 +108,3 @@ jobs:
           files: ./test_results.xml
           fail_on: nothing
           pull_request_build: commit
-
-      - name: Run coverage report
-        if: always()
-        run: poetry run coverage xml -o coverage.xml
-
-      - name: Upload artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-artifacts
-          path: |
-            test_results.xml
-            coverage.xml
-
-  Sonarcloud:
-    name: SonarCloud
-    runs-on: ubuntu-latest
-    needs:
-      - Linting
-      - Mypy
-      - Test
-    if: always()
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Download test artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: test-artifacts
-          path: .
-
-      - name: Download linter artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: linter-artifacts
-          path: .
-
-      - name: Download mypy artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: mypy-artifacts
-          path: .
-
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

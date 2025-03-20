@@ -1,4 +1,4 @@
-from tp.app import app
+from printerm.app import app
 
 if __name__ == "__main__":
     app()

@@ -3,16 +3,12 @@
 all: lint mypy test
 
 lint:
-	poetry run sh -c 'set -x && \
-	ruff format tp/ test/ \
-	&& ruff check --fix --show-fixes tp/ test/ \
-	&& bandit -c pyproject.toml -r tp/'
+	uv run ruff format printerm/ test/ \
+	&& uv run ruff check --fix --show-fixes printerm/ test/ \
+	&& uv run bandit -c pyproject.toml -r printerm/
 
 mypy:
-	poetry run mypy tp/ test/
+	uv run mypy printerm/ test/
 
 test:
-	poetry run pytest --cov --cov-report term-missing:skip-covered
-
-freeze:
-	poetry export -f requirements.txt --output requirements.txt --without-hashes
+	uv run pytest --cov --cov-report term-missing:skip-covered

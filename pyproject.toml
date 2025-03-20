@@ -1,39 +1,42 @@
-[tool.poetry]
-name = "tp"
-version = "1.1.0"
-description = ""
-authors = ["Mikołaj Kaczmarek <mikolaj.s.kaczmarek@outlook.com>"]
+[project]
+name = "printerm"
+version = "1.1.1"
+description = "Thermal printer printing tool"
 readme = "README.md"
+authors = [{name = "Mikołaj Kaczmarek", email = "12432719+AN0DA@users.noreply.github.com"}]
+license = {text = "MIT"}
 
-[tool.poetry.dependencies]
-python = "^3.12"
-escpos = "^2.0.0"
-flask = "^3.0.3"
-mistune = "^3.0.2"
-pyqt6 = "^6.7.1"
-typer = "^0.13.0"
-unidecode = "^1.3.8"
-waitress = "^3.0.1"
-requests = "^2.32.3"
+requires-python = ">=3.13"
+dependencies = [
+    "escpos>=2.0.0",
+    "flask>=3.1.0",
+    "mistune>=3.1.2",
+    "platformdirs>=4.3.7",
+    "pyqt6>=6.8.1",
+    "requests>=2.32.3",
+    "typer>=0.15.2",
+    "unidecode>=1.3.8",
+    "waitress>=3.0.2",
+]
 
-[tool.poetry.group.dev.dependencies]
-bandit = "^1.7.7"
-mypy = "^1.8.0"
-pytest = "^8.0.0"
-pytest-cov = "^4.1.0"
-pytest-mock = "^3.12.0"
-ruff = "^0.2.0"
-types-pyyaml = "^6.0.12.20240917"
-types-requests = "^2.32.0.20241016"
-types-waitress = "^3.0.1.20241030"
-
+[dependency-groups]
+dev = [
+    "bandit>=1.8.3",
+    "mypy>=1.15.0",
+    "pytest>=8.3.5",
+    "pytest-cov>=6.0.0",
+    "pytest-mock>=3.14.0",
+    "ruff>=0.9.10",
+    "types-pyyaml>=6.0.12.20241230",
+    "types-requests>=2.32.0.20250306",
+    "types-waitress>=3.0.1.20241117",
+]
 
 [tool.ruff]
 line-length = 120
 output-format = "full"
 
 exclude = [
-    # Commonly ignored dirs
     ".bzr",
     ".direnv",
     ".eggs",
@@ -87,12 +90,12 @@ skip-magic-trailing-comma = false
 
 
 [tool.pytest]
-python_file = "tests.py test_*.py *_tests.py"
+python_files = "tests.py test_*.py *_tests.py"
 norecursedirs = ".git .env venv"
 
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.13"
 show_error_codes = true
 strict = true
 disallow_untyped_calls = false
@@ -108,10 +111,10 @@ exclude_dirs = ['test/*']
 
 
 [tool.coverage.paths]
-source = ["tp/"]
+source = ["printerm/"]
 
 [tool.coverage.run]
-source = ["tp/"]
+source = ["printerm/"]
 omit = [
     "**/__init__.py",
 ]
@@ -120,9 +123,9 @@ relative_files = true
 [tool.coverage.report]
 show_missing = true
 
-[tool.poetry.scripts]
-tp = "tp.app:app"
+[project.scripts]
+printerm = "printerm.app:app"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"

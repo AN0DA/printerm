@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from tp.template_manager import TemplateManager
+from printerm.template_manager import TemplateManager
 
 
 @pytest.fixture

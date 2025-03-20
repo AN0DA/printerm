@@ -36,31 +36,29 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
 
-      - name: Setup Poetry
-        uses: abatilo/actions-poetry@v3
+      - name: Set up Python
+        run: uv python install
 
-      - name: Install Python dependencies
-        run: poetry install
+      - name: Install the project
+        run: uv sync --all-extras --dev
 
       - name: Ruff linter check
         id: ruff-linter
         if: always()
-        run: poetry run ruff check --config pyproject.toml --output-format=github --exit-non-zero-on-fix tp/ test/
+        run: uv run ruff check --config pyproject.toml --output-format=github --exit-non-zero-on-fix tp/ test/
 
       - name: Ruff formatter check
         id: ruff-formatter
         if: always()
-        run: poetry run ruff format --config pyproject.toml --check tp/ test/
+        run: uv run ruff format --config pyproject.toml --check printerm/ test/
 
       - name: Bandit check
         id: bandit
         if: always()
-        run: poetry run bandit -c pyproject.toml -r tp/
+        run: uv run bandit -c pyproject.toml -r printerm/
 
   Test:
     name: Python tests
@@ -76,19 +74,17 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
 
-      - name: Setup Poetry
-        uses: abatilo/actions-poetry@v3
+      - name: Set up Python
+        run: uv python install
 
-      - name: Install Python dependencies
-        run: poetry install
+      - name: Install the project
+        run: uv sync --all-extras --dev
 
       - name: Run Python tests
-        run: poetry run coverage run -m pytest --junitxml=./test_results.xml
+        run: uv run coverage run -m pytest --junitxml=./test_results.xml
 
       - name: Publish test results to GitHub
         uses: EnricoMi/publish-unit-test-result-action@v2
@@ -107,21 +103,21 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
 
-      - name: Setup Poetry
-        uses: abatilo/actions-poetry@v3
+      - name: Set up Python
+        run: uv python install
 
-      - name: Install Python dependencies
-        run: poetry install
+      - name: Install the project
+        run: uv sync --all-extras --dev
 
       - name: Mypy check
         id: mypy
         if: always()
-        run: poetry run mypy tp/ test/
+        run: |
+          source .venv/bin/activate
+          python -m mypy printerm/ test/
 
   Semantic-release:
     name: Run semantic release
@@ -138,16 +134,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
       - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
+        run: uv python install
 
-      - name: Setup Poetry
-        uses: abatilo/actions-poetry@v3
-
-      - name: Install dependencies
-        run: poetry install
+      - name: Install the project
+        run: uv sync --all-extras --dev
 
       - name: Create .releaserc file
         run: cp .github/.releaserc .releaserc
@@ -163,16 +157,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Update Sonar Project Version
-        env:
-          NEW_VERSION: ${{ steps.release.outputs.new_release_version }}
-        run: sed -i "s/sonar.projectVersion=.*/sonar.projectVersion=$NEW_VERSION/" sonar-project.properties
-
       - name: Update __init__.py version
         env:
           NEW_VERSION: ${{ steps.release.outputs.new_release_version }}
-        run: sed -i "s/__version__ = .*/__version__ = \"$NEW_VERSION\"/" tp/__init__.py
-
+        run: sed -i "s/__version__ = .*/__version__ = \"$NEW_VERSION\"/" printerm/__init__.py
 
       - name: Upload artifacts
         if: steps.release.outputs.new_release_published == 'true'
@@ -180,9 +168,44 @@ jobs:
         with:
           name: release-artifacts
           path: |
+            printerm/__init__.py
             CHANGELOG.md
             pyproject.toml
-            sonar-project.properties
+
+  Publish-to-PyPI:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    needs:
+      - Semantic-release
+    if: needs.Semantic-release.outputs.new_release_published == 'true'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-artifacts
+          path: .
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Install the project
+        run: uv sync --all-extras --dev
+
+      - name: Build package
+        run: python -m build
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true
 
   Changelog-pr:
     name: Create Changelog Pull Request
@@ -208,7 +231,7 @@ jobs:
       - name: Commit and push changes
         run: |
           git checkout -b release/${{ needs.Semantic-release.outputs.new_release_version }}
-          git add CHANGELOG.md pyproject.toml sonar-project.properties
+          git add CHANGELOG.md pyproject.toml
           git commit -m "chore: release ${{ needs.Semantic-release.outputs.new_release_version }}"
           git push origin release/${{ needs.Semantic-release.outputs.new_release_version }}
 
@@ -217,8 +240,8 @@ jobs:
           gh pr create \
           -B main -H release/${{ needs.Semantic-release.outputs.new_release_version }} \
           --title 'chore: release ${{ needs.Semantic-release.outputs.new_release_version }}' \
-          --body 'This PR updates the changelog, `pyproject.toml` and `sonar-project.properties` for version ${{ needs.Semantic-release.outputs.new_release_version }}.'
-          
+          --body 'This PR updates the changelog and `pyproject.toml` for version ${{ needs.Semantic-release.outputs.new_release_version }}.'
+
           echo "::notice::Changes committed and pushed; pull request created."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -6,8 +6,8 @@ import pytest
 from flask.testing import FlaskClient
 from typer.testing import CliRunner
 
-from tp.template_manager import TemplateManager
-from tp.web_app import app
+from printerm.template_manager import TemplateManager
+from printerm.web_app import app
 
 
 @pytest.fixture
@@ -24,7 +24,7 @@ def client() -> Generator[FlaskClient, None, None]:
 
 @pytest.fixture
 def mock_network_printer() -> Generator[MagicMock, None, None]:
-    with patch("tp.printer.Network") as mock_network:
+    with patch("printerm.printer.Network") as mock_network:
         yield mock_network
 
 
@@ -38,19 +38,19 @@ def template_manager(tmp_path: Path) -> TemplateManager:
 
 @pytest.fixture
 def mock_printer() -> Generator[MagicMock, None, None]:
-    with patch("tp.app.ThermalPrinter") as mock_printer_class:
+    with patch("printerm.app.ThermalPrinter") as mock_printer_class:
         yield mock_printer_class
 
 
 @pytest.fixture
 def mock_get_printer_ip() -> Generator[None, None, None]:
-    with patch("tp.app.get_printer_ip", return_value="192.168.1.100"):
+    with patch("printerm.app.get_printer_ip", return_value="192.168.1.100"):
         yield
 
 
 @pytest.fixture
 def mock_template_manager(tmp_path: Path) -> TemplateManager:
-    with patch("tp.app.TemplateManager") as mock_manager_class:
+    with patch("printerm.app.TemplateManager") as mock_manager_class:
         mock_manager = mock_manager_class.return_value
         mock_manager.template_dir = str(tmp_path)
         return mock_manager

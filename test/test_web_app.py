@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from flask.testing import FlaskClient
 
-from tp.web_app import app
+from printerm.web_app import app
 
 
 @pytest.fixture
@@ -16,13 +16,13 @@ def client() -> Generator[FlaskClient, None, None]:
 
 @pytest.fixture
 def mock_printer() -> Generator[MagicMock, None, None]:
-    with patch("tp.web_app.ThermalPrinter") as mock_printer_class:
+    with patch("printerm.web_app.ThermalPrinter") as mock_printer_class:
         yield mock_printer_class
 
 
 @pytest.fixture
 def mock_get_printer_ip() -> Generator[None, None, None]:
-    with patch("tp.web_app.get_printer_ip", return_value="192.168.1.100"):
+    with patch("printerm.web_app.get_printer_ip", return_value="192.168.1.100"):
         yield
 
 
@@ -34,7 +34,7 @@ def test_index_route(client: FlaskClient) -> None:
 
 
 def test_print_template_route_get(client: FlaskClient) -> None:
-    with patch("tp.web_app.template_manager") as mock_template_manager:
+    with patch("printerm.web_app.template_manager") as mock_template_manager:
         mock_template_manager.get_template.return_value = {"name": "Sample", "variables": [], "segments": []}
         response = client.get("/print/sample")
         assert response.status_code == 200
@@ -42,7 +42,7 @@ def test_print_template_route_get(client: FlaskClient) -> None:
 
 
 def test_print_template_route_post(client: FlaskClient, mock_printer: MagicMock, mock_get_printer_ip: None) -> None:
-    with patch("tp.web_app.template_manager") as mock_template_manager:
+    with patch("printerm.web_app.template_manager") as mock_template_manager:
         mock_template_manager.get_template.return_value = {
             "name": "Sample",
             "variables": [{"name": "title", "description": "Title"}],
@@ -55,10 +55,11 @@ def test_print_template_route_post(client: FlaskClient, mock_printer: MagicMock,
 
 
 def test_settings_route_get(client: FlaskClient) -> None:
-    with patch("tp.web_app.get_printer_ip", return_value="192.168.1.100"), patch(
-        "tp.web_app.get_chars_per_line", return_value=32
-    ), patch("tp.web_app.get_enable_special_letters", return_value=True), patch(
-        "tp.web_app.get_check_for_updates", return_value=True
+    with (
+        patch("printerm.web_app.get_printer_ip", return_value="192.168.1.100"),
+        patch("printerm.web_app.get_chars_per_line", return_value=32),
+        patch("printerm.web_app.get_enable_special_letters", return_value=True),
+        patch("printerm.web_app.get_check_for_updates", return_value=True),
     ):
         response = client.get("/settings")
         assert response.status_code == 200
@@ -74,11 +75,12 @@ def test_settings_route_post(client: FlaskClient) -> None:
         "enable_special_letters": "False",
         "check_for_updates": "True",
     }
-    with patch("tp.web_app.set_printer_ip") as mock_set_ip, patch(
-        "tp.web_app.set_chars_per_line"
-    ) as mock_set_chars, patch("tp.web_app.set_enable_special_letters") as mock_set_enable, patch(
-        "tp.web_app.set_check_for_updates"
-    ) as mock_set_check:
+    with (
+        patch("printerm.web_app.set_printer_ip") as mock_set_ip,
+        patch("printerm.web_app.set_chars_per_line") as mock_set_chars,
+        patch("printerm.web_app.set_enable_special_letters") as mock_set_enable,
+        patch("printerm.web_app.set_check_for_updates") as mock_set_check,
+    ):
         response = client.post("/settings", data=data, follow_redirects=True)
         assert response.status_code == 200
         assert b"Settings saved." in response.data

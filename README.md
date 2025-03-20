@@ -39,12 +39,12 @@ Welcome to the Thermal Printer Application! This project provides a flexible and
 You can install the Thermal Printer Application directly from GitHub:
 
 ```bash
-pip install git+https://github.com/AN0DA/tp.git
+pipx install printerm
 ```
 
 #### Requirements
 
-- Python 3.12 or higher
+- Python 3.13 or higher
 - Networked Thermal Printer compatible with the python-escpos library
 -	Optional for GUI: PyQt6
 -	Optional for Web App: Flask
@@ -53,10 +53,10 @@ pip install git+https://github.com/AN0DA/tp.git
 
 #### Command-Line Interface
 
-After installation, you can use the tp command:
+After installation, you can use the printerm command:
 
 ```bash
-tp --help
+printerm --help
 ```
 
 ##### Printing a Template
@@ -64,19 +64,19 @@ tp --help
 List available templates:
 
 ```bash
-tp print-template
+printerm print-template
 ```
 
 Print using a template:
 
 ```bash
-tp print-template <template_name>
+printerm print-template <template_name>
 ```
 
 Example:
 
 ```bash
-tp print-template task
+printerm print-template task
 ```
 
 ##### Updating Settings
@@ -84,13 +84,13 @@ tp print-template task
 Set the printer IP address:
 
 ```bash
-tp settings set-ip <printer_ip>
+printerm settings set-ip <printer_ip>
 ```
 
 Show current settings:
 
 ```bash
-tp settings show
+printerm settings show
 ```
 
 ##### Manual Update
@@ -98,7 +98,7 @@ tp settings show
 Manually update the application:
 
 ```bash
-tp update
+printerm update
 ```
 
 #### Graphical User Interface
@@ -106,7 +106,7 @@ tp update
 Launch the GUI:
 
 ```bash
-tp gui
+printerm gui
 ```
 
 Features:
@@ -120,7 +120,7 @@ Features:
 Launch the web server:
 
 ```bash
-tp web
+printerm web
 ```
 
 By default, the web app runs on http://0.0.0.0:5555. Open this URL in your browser.
@@ -133,7 +133,7 @@ Features:
 
 ### Configuration
 
-The application uses a configuration file tp_config.ini, located in the current working directory. You can edit this file directly or through the application interfaces.
+The application uses a configuration file config.ini, located in user config directory. You can edit this file directly or through the application interfaces.
 
 #### Configuration Options
 
@@ -147,16 +147,16 @@ The application uses a configuration file tp_config.ini, located in the current 
 ##### Through the CLI
 
 ```bash
-tp config edit
+printerm config edit
 ```
 
 ##### Manually
 
-Open tp_config.ini in your preferred text editor and modify the settings.
+Open config.ini in your preferred text editor and modify the settings.
 
 ## Templates
 
-Templates define what and how the content is printed. They are stored in the tp/print_templates/ directory as YAML files.
+Templates define what and how the content is printed. They are stored in the printerm/print_templates/ directory as YAML files.
 
 ### Built-in Templates
 
@@ -167,7 +167,7 @@ Templates define what and how the content is printed. They are stored in the tp/
 
 ### Adding New Templates
 
-1.	Create a YAML file in the tp/print_templates/ directory.
+1.	Create a YAML file in the printerm/print_templates/ directory.
 2.	Define the template with metadata, variables, and segments.
 3.	Use Jinja2 syntax for dynamic content and Mistune-supported Markdown for formatting.
 
@@ -200,21 +200,21 @@ segments:
 1.	Clone the repository:
 
 ```bash
-git clone https://github.com/AN0DA/tp.git
+git clone https://github.com/AN0DA/printerm.git
 ```
 
 
 2.	Navigate to the project directory:
 
 ```bash
-cd tp
+cd printerm
 ```
 
 
 4.	Install the dependencies:
 
 ```bash
-poetry install
+uv sync
 ```
 
 
