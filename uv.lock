@@ -354,6 +354,15 @@ wheels = [
 ]
 
 [[package]]
+name = "platformdirs"
+version = "4.3.7"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/b6/2d/7d512a3913d60623e7eb945c6d1b4f0bddf1d0b7ada5225274c87e5b53d1/platformdirs-4.3.7.tar.gz", hash = "sha256:eb437d586b6a0986388f0d6f74aa0cde27b48d0e3d66843640bfb6bdcdb6e351", size = 21291 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/6d/45/59578566b3275b8fd9157885918fcd0c4d74162928a5310926887b856a51/platformdirs-4.3.7-py3-none-any.whl", hash = "sha256:a03875334331946f13c549dbd8f4bac7a13a50a895a0eb1e8c6a8ace80d40a94", size = 18499 },
+]
+
+[[package]]
 name = "pluggy"
 version = "1.5.0"
 source = { registry = "https://pypi.org/simple" }
@@ -370,6 +379,7 @@ dependencies = [
     { name = "escpos" },
     { name = "flask" },
     { name = "mistune" },
+    { name = "platformdirs" },
     { name = "pyqt6" },
     { name = "requests" },
     { name = "typer" },
@@ -395,6 +405,7 @@ requires-dist = [
     { name = "escpos", specifier = ">=2.0.0" },
     { name = "flask", specifier = ">=3.1.0" },
     { name = "mistune", specifier = ">=3.1.2" },
+    { name = "platformdirs", specifier = ">=4.3.7" },
     { name = "pyqt6", specifier = ">=6.8.1" },
     { name = "requests", specifier = ">=2.32.3" },
     { name = "typer", specifier = ">=0.15.2" },
