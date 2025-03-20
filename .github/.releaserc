@@ -7,7 +7,7 @@
     [
       "@semantic-release/exec",
       {
-        "generateNotesCmd": "poetry version ${nextRelease.version}"
+        "generateNotesCmd": "uvx --from=toml-cli toml set --toml-path=pyproject.toml project.version ${nextRelease.version}"
       }
     ],
     "@semantic-release/github"
