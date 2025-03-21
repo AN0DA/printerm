@@ -1,3 +1,13 @@
+## [1.1.1](https://github.com/AN0DA/printerm/compare/v1.1.0...v1.1.1) (2025-03-21)
+
+
+### Bug Fixes
+
+* centralize template folder path in config ([30d0711](https://github.com/AN0DA/printerm/commit/30d07115e70c1bd49989b2adf56a664ef571f2e8))
+* Update config file path to use platformdirs for user-specific configuration ([77ed66a](https://github.com/AN0DA/printerm/commit/77ed66afab387526364a51dc028528680d64f488))
+* Update release configuration to use uvx for version management ([386b020](https://github.com/AN0DA/printerm/commit/386b0203f471400f91c702ffa4685bacdb8d9c16))
+* Update Ruff linter check path to use printerm directory ([ed352b9](https://github.com/AN0DA/printerm/commit/ed352b92861fd2f338410df8fa778b5712f05f70))
+
 # [1.1.0](https://github.com/AN0DA/tp/compare/v1.0.0...v1.1.0) (2024-11-10)
 
 
