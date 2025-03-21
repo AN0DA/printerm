@@ -117,7 +117,7 @@ jobs:
         if: always()
         run: |
           source .venv/bin/activate
-          python -m mypy printerm/ test/
+          uv run mypy printerm/ test/
 
   Semantic-release:
     name: Run semantic release
@@ -200,7 +200,7 @@ jobs:
         run: uv sync --all-extras --dev
 
       - name: Build package
-        run: python -m build
+        run: uv build
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
@@ -231,7 +231,7 @@ jobs:
       - name: Commit and push changes
         run: |
           git checkout -b release/${{ needs.Semantic-release.outputs.new_release_version }}
-          git add CHANGELOG.md pyproject.toml
+          git add CHANGELOG.md pyproject.toml printerm/__init__.py
           git commit -m "chore: release ${{ needs.Semantic-release.outputs.new_release_version }}"
           git push origin release/${{ needs.Semantic-release.outputs.new_release_version }}
 
