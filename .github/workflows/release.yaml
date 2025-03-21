@@ -48,7 +48,7 @@ jobs:
       - name: Ruff linter check
         id: ruff-linter
         if: always()
-        run: uv run ruff check --config pyproject.toml --output-format=github --exit-non-zero-on-fix tp/ test/
+        run: uv run ruff check --config pyproject.toml --output-format=github --exit-non-zero-on-fix printerm/ test/
 
       - name: Ruff formatter check
         id: ruff-formatter
