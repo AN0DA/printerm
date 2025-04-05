@@ -102,16 +102,23 @@ def compute_agenda_variables() -> dict[str, Any]:
 
 
 def get_latest_version() -> str:
-    url = "https://api.github.com/repos/AN0DA/printerm/releases/latest"
-    response = requests.get(url, timeout=5)
-    if response.status_code == 200:
-        data = response.json()
-        return data["tag_name"].lstrip("v")  # Remove 'v' if present
-    else:
-        raise RuntimeWarning("Failed to fetch the latest version from GitHub.")
+    """Get the latest version of printerm from PyPI."""
+    url = "https://pypi.org/pypi/printerm/json"
+    try:
+        response = requests.get(url, timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            return data["info"]["version"]
+        else:
+            logger.warning(f"Failed to fetch the latest version from PyPI: {response.status_code}")
+            raise RuntimeWarning("Failed to fetch the latest version from PyPI.")
+    except Exception as e:
+        logger.error(f"Error while fetching latest version: {e}")
+        raise RuntimeWarning(f"Failed to fetch the latest version from PyPI: {e}") from e
 
 
 def is_new_version_available(current_version: str) -> bool:
+    """Check if a newer version is available on PyPI."""
     try:
         latest_version = get_latest_version()
         return version.parse(latest_version) > version.parse(current_version)

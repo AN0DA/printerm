@@ -38,9 +38,7 @@ def test_update_command(mocker: MagicMock) -> None:
     mock_subprocess = mocker.patch("printerm.interfaces.cli.subprocess.check_call")
     result = runner.invoke(app, ["update"])
     assert result.exit_code == 0
-    mock_subprocess.assert_called_with(
-        [mocker.ANY, "-m", "pip", "install", "--upgrade", "git+https://github.com/AN0DA/printerm.git"]
-    )
+    mock_subprocess.assert_called_with([mocker.ANY, "-m", "pip", "install", "--upgrade", "printerm"])
     assert "Application updated successfully." in result.output
 
 
