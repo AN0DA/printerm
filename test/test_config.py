@@ -6,13 +6,13 @@ from collections.abc import Generator
 
 import pytest
 
-from printerm import config
+from printerm.core import config
 
 CONFIG_FILE = config.CONFIG_FILE
 
 
 @pytest.fixture(autouse=True)
-def setup_and_teardown() -> Generator[None, None, None]:
+def setup_and_teardown() -> Generator[None]:
     # Setup: Ensure the config file is removed before each test
     if os.path.exists(CONFIG_FILE):
         os.remove(CONFIG_FILE)

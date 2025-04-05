@@ -5,7 +5,7 @@ from flask import Flask, flash, redirect, render_template, request, url_for
 from waitress import serve
 from werkzeug.wrappers import Response
 
-from printerm.config import (
+from printerm.core.config import (
     PRINT_TEMPLATE_FOLDER,
     get_chars_per_line,
     get_check_for_updates,
@@ -17,13 +17,16 @@ from printerm.config import (
     set_enable_special_letters,
     set_printer_ip,
 )
-from printerm.printer import ThermalPrinter
-from printerm.template_manager import TemplateManager
-from printerm.utils import compute_agenda_variables
+from printerm.core.utils import compute_agenda_variables
+from printerm.printing.printer import ThermalPrinter
+from printerm.templates.template_manager import TemplateManager
 
 logger = logging.getLogger(__name__)
 
-app = Flask(__name__)
+dir_path = os.path.dirname(os.path.realpath(__file__))
+template_dir = os.path.join(dir_path, "web_templates")
+
+app = Flask(__name__, template_folder=template_dir)
 app.secret_key = get_flask_secret_key()
 
 template_manager = TemplateManager(PRINT_TEMPLATE_FOLDER)
@@ -132,14 +135,4 @@ def settings() -> Response | str:
 
 
 def main() -> None:
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    template_dir = os.path.join(dir_path, "templates")
-    static_dir = os.path.join(dir_path, "static")
-    app.template_folder = template_dir
-    app.static_folder = static_dir
-
     serve(app, host="0.0.0.0", port=5555)  # nosec: B104
-
-
-if __name__ == "__main__":
-    main()

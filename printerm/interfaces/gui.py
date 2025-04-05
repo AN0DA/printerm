@@ -16,7 +16,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from printerm.config import (
+from printerm.core.config import (
     PRINT_TEMPLATE_FOLDER,
     get_chars_per_line,
     get_check_for_updates,
@@ -27,9 +27,9 @@ from printerm.config import (
     set_enable_special_letters,
     set_printer_ip,
 )
-from printerm.printer import ThermalPrinter
-from printerm.template_manager import TemplateManager
-from printerm.utils import compute_agenda_variables
+from printerm.core.utils import compute_agenda_variables
+from printerm.printing.printer import ThermalPrinter
+from printerm.templates.template_manager import TemplateManager
 
 logger = logging.getLogger(__name__)
 

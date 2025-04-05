@@ -3,8 +3,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from printerm.template_manager import TemplateManager
-from printerm.utils import TemplateRenderer, compute_agenda_variables, get_latest_version, is_new_version_available
+from printerm.core.utils import (
+    TemplateRenderer,
+    compute_agenda_variables,
+    get_latest_version,
+    is_new_version_available,
+)
+from printerm.templates.template_manager import TemplateManager
 
 
 @pytest.fixture
@@ -77,13 +82,13 @@ def test_get_latest_version(mocker: MagicMock) -> None:
     mock_response = mocker.Mock()
     mock_response.status_code = 200
     mock_response.json.return_value = {"tag_name": "v1.2.3"}
-    mocker.patch("printerm.utils.requests.get", return_value=mock_response)
+    mocker.patch("printerm.core.utils.requests.get", return_value=mock_response)
     latest_version = get_latest_version()
     assert latest_version == "1.2.3"
 
 
 def test_is_new_version_available(mocker: MagicMock) -> None:
-    mocker.patch("printerm.utils.get_latest_version", return_value="1.2.3")
+    mocker.patch("printerm.core.utils.get_latest_version", return_value="1.2.3")
     assert is_new_version_available("1.0.0") is True
     assert is_new_version_available("1.2.3") is False
     assert is_new_version_available("1.3.0") is False

@@ -9,9 +9,9 @@ from mistune import Markdown
 from packaging import version
 from unidecode import unidecode
 
-from printerm.config import get_chars_per_line, get_enable_special_letters
-from printerm.markdown_renderer import PrinterRenderer
-from printerm.template_manager import TemplateManager
+from printerm.core.config import get_chars_per_line, get_enable_special_letters
+from printerm.printing.markdown_renderer import PrinterRenderer
+from printerm.templates.template_manager import TemplateManager
 
 logger = logging.getLogger(__name__)
 

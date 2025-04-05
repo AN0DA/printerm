@@ -5,7 +5,7 @@ from platformdirs import user_config_dir
 
 CONFIG_FILE = os.path.join(user_config_dir("printerm", ensure_exists=True), "config.ini")
 
-PRINT_TEMPLATE_FOLDER = os.path.join(os.path.dirname(os.path.realpath(__file__)), "print_templates")
+PRINT_TEMPLATE_FOLDER = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "templates", "print_templates")
 
 
 def get_printer_ip() -> str:

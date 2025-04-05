@@ -3,8 +3,8 @@ from typing import Any
 
 from escpos.printer import Network
 
-from printerm.template_manager import TemplateManager
-from printerm.utils import TemplateRenderer
+from printerm.core.utils import TemplateRenderer
+from printerm.templates.template_manager import TemplateManager
 
 logger = logging.getLogger(__name__)
 

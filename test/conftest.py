@@ -6,8 +6,8 @@ import pytest
 from flask.testing import FlaskClient
 from typer.testing import CliRunner
 
-from printerm.template_manager import TemplateManager
-from printerm.web_app import app
+from printerm.interfaces.web import app
+from printerm.templates.template_manager import TemplateManager
 
 
 @pytest.fixture
@@ -16,14 +16,14 @@ def runner() -> CliRunner:
 
 
 @pytest.fixture
-def client() -> Generator[FlaskClient, None, None]:
+def client() -> Generator[FlaskClient]:
     app.config["TESTING"] = True
     with app.test_client() as client:
         yield client
 
 
 @pytest.fixture
-def mock_network_printer() -> Generator[MagicMock, None, None]:
+def mock_network_printer() -> Generator[MagicMock]:
     with patch("printerm.printer.Network") as mock_network:
         yield mock_network
 
@@ -37,13 +37,13 @@ def template_manager(tmp_path: Path) -> TemplateManager:
 
 
 @pytest.fixture
-def mock_printer() -> Generator[MagicMock, None, None]:
+def mock_printer() -> Generator[MagicMock]:
     with patch("printerm.app.ThermalPrinter") as mock_printer_class:
         yield mock_printer_class
 
 
 @pytest.fixture
-def mock_get_printer_ip() -> Generator[None, None, None]:
+def mock_get_printer_ip() -> Generator[None]:
     with patch("printerm.app.get_printer_ip", return_value="192.168.1.100"):
         yield
 
