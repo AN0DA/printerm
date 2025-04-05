@@ -55,13 +55,12 @@ def check_for_updates_on_startup() -> None:
 
 
 def perform_update() -> None:
+    """Update the application to the latest version from PyPI."""
     try:
-        cmd = [sys.executable, "-m", "pip", "install", "--upgrade", "git+https://github.com/AN0DA/printerm.git"]
+        cmd = [sys.executable, "-m", "pip", "install", "--upgrade", "printerm"]
         typer.echo("Updating the application...")
 
         # Check for user permissions
-        import os
-
         if not os.access(sys.executable, os.W_OK):
             typer.echo("You might not have permission to update the application.")
             typer.echo("Please run the update command with administrative privileges.")

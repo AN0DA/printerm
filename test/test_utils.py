@@ -81,10 +81,10 @@ def test_compute_agenda_variables() -> None:
 def test_get_latest_version(mocker: MagicMock) -> None:
     mock_response = mocker.Mock()
     mock_response.status_code = 200
-    mock_response.json.return_value = {"tag_name": "v1.2.3"}
+    mock_response.json.return_value = {"info": {"version": "2.1.37"}}
     mocker.patch("printerm.core.utils.requests.get", return_value=mock_response)
     latest_version = get_latest_version()
-    assert latest_version == "1.2.3"
+    assert latest_version == "2.1.37"
 
 
 def test_is_new_version_available(mocker: MagicMock) -> None:
