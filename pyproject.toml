@@ -64,7 +64,7 @@ exclude = [
     "site-packages",
     "venv",
 ]
-target-version = "py312"
+target-version = "py313"
 
 [tool.ruff.lint]
 select = [
@@ -111,10 +111,10 @@ exclude_dirs = ['test/*']
 
 
 [tool.coverage.paths]
-source = ["printerm/"]
+source = ["src/"]
 
 [tool.coverage.run]
-source = ["printerm/"]
+source = ["src/"]
 omit = [
     "**/__init__.py",
 ]
@@ -124,7 +124,7 @@ relative_files = true
 show_missing = true
 
 [project.scripts]
-printerm = "printerm.app:app"
+printerm = "printerm.interfaces.cli:app"
 
 [build-system]
 requires = ["hatchling"]

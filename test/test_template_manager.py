@@ -4,11 +4,11 @@ from pathlib import Path
 
 import pytest
 
-from printerm.template_manager import TemplateManager
+from printerm.templates.template_manager import TemplateManager
 
 
 @pytest.fixture
-def template_dir(tmp_path: Path) -> Generator[str, None, None]:
+def template_dir(tmp_path: Path) -> Generator[str]:
     # Set up a temporary template directory
     templates_path = tmp_path / "print_templates"
     templates_path.mkdir()

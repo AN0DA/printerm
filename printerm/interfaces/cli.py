@@ -7,7 +7,7 @@ import click
 import typer
 
 from printerm import __version__
-from printerm.config import (
+from printerm.core.config import (
     CONFIG_FILE,
     PRINT_TEMPLATE_FOLDER,
     get_chars_per_line,
@@ -19,9 +19,9 @@ from printerm.config import (
     set_enable_special_letters,
     set_printer_ip,
 )
-from printerm.printer import ThermalPrinter
-from printerm.template_manager import TemplateManager
-from printerm.utils import compute_agenda_variables, is_new_version_available
+from printerm.core.utils import compute_agenda_variables, is_new_version_available
+from printerm.printing.printer import ThermalPrinter
+from printerm.templates.template_manager import TemplateManager
 
 logging.basicConfig(
     level=logging.INFO,
@@ -186,9 +186,9 @@ def gui() -> None:
     Launch the GUI version of the application.
     """
     try:
-        import printerm.gui
+        from printerm.interfaces import gui
 
-        printerm.gui.main()
+        gui.main()
     except ImportError as e:
         typer.echo("Failed to launch GUI. PyQt6 might not be installed.")
         typer.echo("Install it using 'pip install PyQt6'")
@@ -202,9 +202,9 @@ def web() -> None:
     Launch the web server with the web interface.
     """
     try:
-        import printerm.web_app
+        from printerm.interfaces import web
 
-        printerm.web_app.main()
+        web.main()
     except ImportError as e:
         typer.echo("Failed to launch web interface. Flask might not be installed.")
         typer.echo("Install it using 'pip install Flask'")
