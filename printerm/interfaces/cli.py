@@ -189,8 +189,8 @@ def gui() -> None:
 
         gui.main()
     except ImportError as e:
-        typer.echo("Failed to launch GUI. PyQt6 might not be installed.")
-        typer.echo("Install it using 'pip install PyQt6'")
+        typer.echo("Failed to launch GUI. Make sure Tkinter is available on your system.")
+        typer.echo("Tkinter should be included with your Python installation.")
         logger.error(f"Error launching GUI: {e}", exc_info=True)
         sys.exit(1)
 

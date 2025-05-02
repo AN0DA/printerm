@@ -46,8 +46,8 @@ pipx install printerm
 
 - Python 3.13 or higher
 - Networked Thermal Printer compatible with the python-escpos library
--	Optional for GUI: PyQt6
--	Optional for Web App: Flask
+- Tkinter (included with standard Python installation)
+- Optional for Web App: Flask
 
 ### Usage
 
