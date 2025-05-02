@@ -1,4 +1,3 @@
-import datetime
 import logging
 import textwrap
 from typing import Any
@@ -43,6 +42,18 @@ class TemplateRenderer:
         if not template:
             raise ValueError(f"Template '{template_name}' not found.")
 
+        # Check if there's a script for this template and execute it if needed
+        script_func = self.template_manager.get_template_script(template_name)
+        if script_func:
+            # Merge script-generated variables with provided context
+            # Context variables take precedence over script-generated ones
+            script_vars = script_func()
+            # Only add script variables that aren't already in context
+            for key, value in script_vars.items():
+                if key not in context:
+                    context[key] = value
+            logger.debug(f"Applied script variables for template '{template_name}'")
+
         segments = template.get("segments", [])
         rendered_segments = []
         env = Environment(loader=BaseLoader(), autoescape=True, keep_trailing_newline=True)
@@ -80,25 +91,6 @@ class TemplateRenderer:
                 rendered_segments.append({"text": wrapped_text, "styles": segment.get("styles", {})})
 
         return rendered_segments
-
-
-def compute_agenda_variables() -> dict[str, Any]:
-    today = datetime.date.today()
-    _, week_number, _ = today.isocalendar()
-    week_start = today - datetime.timedelta(days=today.weekday())
-    week_end = week_start + datetime.timedelta(days=6)
-    days = []
-    for i in range(7):
-        day_date = week_start + datetime.timedelta(days=i)
-        day_name = day_date.strftime("%A")
-        date_str = day_date.strftime("%Y-%m-%d")
-        days.append({"day_name": day_name, "date": date_str})
-    return {
-        "week_number": week_number,
-        "week_start_date": week_start.strftime("%Y-%m-%d"),
-        "week_end_date": week_end.strftime("%Y-%m-%d"),
-        "days": days,
-    }
 
 
 def get_latest_version() -> str:

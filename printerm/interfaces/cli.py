@@ -19,7 +19,7 @@ from printerm.core.config import (
     set_enable_special_letters,
     set_printer_ip,
 )
-from printerm.core.utils import compute_agenda_variables, is_new_version_available
+from printerm.core.utils import is_new_version_available
 from printerm.printing.printer import ThermalPrinter
 from printerm.templates.template_manager import TemplateManager
 
@@ -92,15 +92,22 @@ def print_template(template_name: str = typer.Argument(None)) -> None:
         sys.exit(1)
 
     context = {}
-    if template_name == "agenda":
-        context = compute_agenda_variables()
-    else:
-        for var in template.get("variables", []):
-            if var.get("markdown", False):
-                value = click.edit(var["description"], require_save=True)
-            else:
-                value = typer.prompt(var["description"])
-            context[var["name"]] = value
+
+    # Check if there's a script for this template
+    script_func = template_manager.get_template_script(template_name)
+    if script_func:
+        # Execute the script to get pre-computed variables
+        script_vars = script_func()
+        context.update(script_vars)
+        typer.echo(f"Applied script variables for template '{template_name}'")
+
+    # Prompt for any additional variables defined in the template
+    for var in template.get("variables", []):
+        if var.get("markdown", False):
+            value = click.edit(var["description"], require_save=True)
+        else:
+            value = typer.prompt(var["description"])
+        context[var["name"]] = value
 
     try:
         ip_address = get_printer_ip()

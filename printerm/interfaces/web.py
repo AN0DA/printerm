@@ -17,10 +17,10 @@ from printerm.core.config import (
     set_enable_special_letters,
     set_printer_ip,
 )
-from printerm.core.utils import compute_agenda_variables
 from printerm.printing.printer import ThermalPrinter
 from printerm.templates.template_manager import TemplateManager
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -48,17 +48,24 @@ def print_template(template_name: str) -> Response | str:
     if request.method == "POST":
         context = {}
         try:
-            match template_name:
-                case "agenda":
-                    context = compute_agenda_variables()
-                case _:
-                    context = {var["name"]: request.form.get(var["name"]) for var in template.get("variables", [])}
+            # Check for a script for this template
+            script_func = template_manager.get_template_script(template_name)
+            if script_func:
+                # Execute the script to get pre-computed variables
+                script_vars = script_func()
+                context.update(script_vars)
+                logger.info(f"Applied script variables for template '{template_name}'")
 
-                    if not context:
-                        confirm = request.form.get("confirm")
-                        if confirm == "no":
-                            flash(f"Cancelled printing {template_name}.", "info")
-                            return redirect(url_for("index"))
+            # Add form variables if any
+            for var in template.get("variables", []):
+                context[var["name"]] = request.form.get(var["name"])
+
+            # Handle templates with no variables
+            if not template.get("variables", []):
+                confirm = request.form.get("confirm")
+                if confirm == "no":
+                    flash(f"Cancelled printing {template_name}.", "info")
+                    return redirect(url_for("index"))
 
             ip_address = get_printer_ip()
             with ThermalPrinter(ip_address, template_manager) as printer:
@@ -69,10 +76,19 @@ def print_template(template_name: str) -> Response | str:
         except Exception as e:
             logger.error(f"Error printing template '{template_name}': {e}", exc_info=True)
             flash(f"Failed to print: {e}", "error")
+
+    # Check for scripted variables to display in template
+    script_variables = {}
+    script_func = template_manager.get_template_script(template_name)
+    if script_func:
+        script_variables = script_func()
+        logger.info(f"Template '{template_name}' has script variables: {list(script_variables.keys())}")
+
     return render_template(
         "print_template.html",
         templates=templates,
         template=template,
+        script_variables=script_variables,
         markdown_vars=[var["name"] for var in template.get("variables", []) if var.get("markdown", False)],
     )
 

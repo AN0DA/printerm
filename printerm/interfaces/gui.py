@@ -14,7 +14,7 @@ from printerm.core.config import (
     set_enable_special_letters,
     set_printer_ip,
 )
-from printerm.core.utils import TemplateRenderer, compute_agenda_variables
+from printerm.core.utils import TemplateRenderer
 from printerm.printing.printer import ThermalPrinter
 from printerm.templates.template_manager import TemplateManager
 
@@ -36,19 +36,11 @@ class MainWindow:
         main_frame.pack(fill=tk.BOTH, expand=True)
 
         # Add title
-        title_label = ttk.Label(
-            main_frame, 
-            text="Thermal Printer Application", 
-            font=("TkDefaultFont", 16, "bold")
-        )
+        title_label = ttk.Label(main_frame, text="Thermal Printer Application", font=("TkDefaultFont", 16, "bold"))
         title_label.pack(pady=(0, 20))
-        
+
         # Add instructions
-        instruction_label = ttk.Label(
-            main_frame,
-            text="Select a template to print:",
-            font=("TkDefaultFont", 12)
-        )
+        instruction_label = ttk.Label(main_frame, text="Select a template to print:", font=("TkDefaultFont", 12))
         instruction_label.pack(pady=(0, 10))
 
         # Create main content area with two panels
@@ -61,7 +53,7 @@ class MainWindow:
 
         # Right panel for template preview with fixed width
         preview_frame = ttk.LabelFrame(content_frame, text="Template Preview")
-        
+
         # Calculate fixed width for preview based on character count
         # For monospace font, measure the width of a single character
         temp_label = tk.Label(self.root, font=("Courier", 10))
@@ -69,81 +61,71 @@ class MainWindow:
         temp_label.pack()
         char_width = temp_label.winfo_reqwidth()
         temp_label.destroy()
-        
+
         # Get character width from config
         chars_per_line = get_chars_per_line()
-        
+
         # Set fixed width in pixels (chars + some padding for scrollbar and borders)
         frame_width = (chars_per_line + 5) * char_width
         preview_frame.config(width=frame_width)
-        
+
         # Prevent preview from expanding horizontally
         preview_frame.pack(side=tk.RIGHT, fill=tk.Y, expand=False, padx=(5, 0))
-        
+
         # Ensure preview frame maintains fixed width
         preview_frame.pack_propagate(False)
-        
+
         # Set up monospaced preview text widget
         self.preview_text = scrolledtext.ScrolledText(
-            preview_frame, 
-            wrap=tk.WORD, 
+            preview_frame,
+            wrap=tk.WORD,
             width=chars_per_line + 5,  # Set exact width in characters
-            height=15, 
-            font=("Courier", 10)
+            height=15,
+            font=("Courier", 10),
         )
         self.preview_text.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         self.preview_text.config(state=tk.DISABLED)
-        
+
         # Add width indicator at the bottom of preview
         width_frame = ttk.Frame(preview_frame)
         width_frame.pack(fill=tk.X, pady=(0, 5))
-        
+
         width_label = ttk.Label(
-            width_frame, 
-            text=f"Printer width: {chars_per_line} characters", 
-            font=("TkDefaultFont", 8)
+            width_frame, text=f"Printer width: {chars_per_line} characters", font=("TkDefaultFont", 8)
         )
         width_label.pack(side=tk.LEFT, padx=5)
 
         # Create a scrollable canvas for buttons if there are many templates
         templates = self.template_manager.list_templates()
-        
+
         for template_name in templates:
             # Make button names more user-friendly
             display_name = template_name.replace("_", " ").title()
-            
+
             # Create a frame for each template with preview and print buttons
             template_frame = ttk.Frame(button_frame)
             template_frame.pack(fill=tk.X, padx=5, pady=5)
-            
+
             template_button = ttk.Button(
                 template_frame,
                 text=display_name,
                 command=lambda t=template_name: self.show_template_preview(t),
-                width=15
+                width=15,
             )
             template_button.pack(side=tk.LEFT, padx=(5, 2))
-            
+
             print_button = ttk.Button(
-                template_frame,
-                text="Print",
-                command=lambda t=template_name: self.open_template_dialog(t),
-                width=8
+                template_frame, text="Print", command=lambda t=template_name: self.open_template_dialog(t), width=8
             )
             print_button.pack(side=tk.RIGHT, padx=(2, 5))
 
         # Add settings button at the bottom
         settings_frame = ttk.Frame(main_frame)
         settings_frame.pack(fill=tk.X, pady=10)
-        
-        settings_button = ttk.Button(
-            settings_frame,
-            text="Settings",
-            command=self.open_settings_dialog,
-            width=15
-        )
+
+        settings_button = ttk.Button(settings_frame, text="Settings", command=self.open_settings_dialog, width=15)
         settings_button.pack(side=tk.RIGHT, padx=10)
-        
+
         # Show the first template preview by default if templates exist
         if templates:
             self.show_template_preview(templates[0])
@@ -176,6 +158,17 @@ class MainWindow:
             else:
                 self.preview_text.insert(tk.END, "None\n")
 
+            # Check if a script is available
+            script_func = self.template_manager.get_template_script(template_name)
+            if script_func:
+                self.preview_text.insert(tk.END, "\nSCRIPT VARIABLES:\n", "subtitle")
+                script_vars = script_func()
+                if script_vars:
+                    for key in script_vars:
+                        self.preview_text.insert(tk.END, f"• {key} (auto-generated)\n")
+                else:
+                    self.preview_text.insert(tk.END, "Script doesn't provide any variables\n")
+
             self.preview_text.insert(tk.END, f"\n{'-' * 40}\n", "separator")
             self.preview_text.insert(tk.END, "SAMPLE OUTPUT:\n", "subtitle")
 
@@ -185,12 +178,15 @@ class MainWindow:
 
             # Generate a sample preview using placeholder values
             sample_context = {}
-            if template_name == "agenda":
-                sample_context = compute_agenda_variables()
-            else:
-                for var in template.get("variables", []):
-                    placeholder = f"[{var['description']}]"
-                    sample_context[var["name"]] = placeholder
+
+            # Use script variables if available
+            if script_func:
+                sample_context.update(script_func())
+
+            # Add placeholder values for other variables
+            for var in template.get("variables", []):
+                placeholder = f"[{var['description']}]"
+                sample_context[var["name"]] = placeholder
 
             try:
                 segments = self.template_renderer.render_from_template(template_name, sample_context)
@@ -225,10 +221,10 @@ class MainWindow:
 
             # Word wrap text to match printer width
             wrapped_text = ""
-            for line in text.split('\n'):
+            for line in text.split("\n"):
                 # Keep track of current line length
                 current_line = ""
-                for word in line.split(' '):
+                for word in line.split(" "):
                     # If adding this word would exceed chars_per_line
                     if len(current_line) + len(word) + 1 > chars_per_line:
                         # Add current line to wrapped text and start a new line
@@ -290,26 +286,34 @@ class TemplateDialog:
         self.chars_per_line = get_chars_per_line()
         self.inputs = {}
         self.preview = None
+        self.script_variables = {}
+
+        # Load script variables if available
+        script_func = self.template_manager.get_template_script(template_name)
+        if script_func:
+            self.script_variables = script_func()
+            logger.debug(f"Loaded script variables for {template_name}: {list(self.script_variables.keys())}")
+
         self.init_ui()
 
     def init_ui(self):
         template = self.template_manager.get_template(self.template_name)
-        
+
         # Main frame
         main_frame = ttk.Frame(self.parent, padding="20")
         main_frame.pack(fill=tk.BOTH, expand=True)
-        
+
         # Add a PanedWindow for form and preview
         paned = ttk.PanedWindow(main_frame, orient=tk.HORIZONTAL)
         paned.pack(fill=tk.BOTH, expand=True, pady=(10, 20))
-        
+
         # Form frame on the left
         form_container = ttk.Frame(paned)
         paned.add(form_container, weight=1)
-        
+
         # Preview frame on the right - with fixed width
         preview_container = ttk.LabelFrame(paned, text="Print Preview")
-        
+
         # Calculate pixel width based on character count
         # For monospace font, measure the width of a single character
         temp_label = tk.Label(self.parent, font=("Courier", 10))
@@ -317,40 +321,38 @@ class TemplateDialog:
         temp_label.pack()
         char_width = temp_label.winfo_reqwidth()
         temp_label.destroy()
-        
+
         # Set fixed width in pixels (chars + some padding)
         frame_width = (self.chars_per_line + 5) * char_width
         preview_container.config(width=frame_width)
-        
+
         # Prevent preview_container from expanding horizontally
         paned.add(preview_container, weight=0)
-        
+
         # Set up the preview area with monospaced font for accurate character width
         monospace_font = tkfont.Font(family="Courier", size=10)
         self.preview = scrolledtext.ScrolledText(
-            preview_container, 
-            wrap=tk.WORD, 
+            preview_container,
+            wrap=tk.WORD,
             width=self.chars_per_line,  # Set width exactly to chars_per_line
             height=15,
-            font=monospace_font
+            font=monospace_font,
         )
         self.preview.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         self.preview.config(state=tk.DISABLED)
-        
+
         # Add print width indicator
         width_frame = ttk.Frame(preview_container)
         width_frame.pack(fill=tk.X, pady=(0, 5))
-        
+
         width_label = ttk.Label(
-            width_frame, 
-            text=f"Printer width: {self.chars_per_line} characters", 
-            font=("TkDefaultFont", 8)
+            width_frame, text=f"Printer width: {self.chars_per_line} characters", font=("TkDefaultFont", 8)
         )
         width_label.pack(side=tk.LEFT, padx=5)
-        
+
         # Make sure the preview container maintains its fixed width
         preview_container.pack_propagate(False)
-        
+
         # Title in form container
         title_label = ttk.Label(
             form_container,
@@ -363,6 +365,18 @@ class TemplateDialog:
         if "description" in template:
             desc_label = ttk.Label(form_container, text=template.get("description", ""), wraplength=250)
             desc_label.pack(pady=(0, 15))
+
+        # Display script variables if any
+        if self.script_variables:
+            script_frame = ttk.LabelFrame(form_container, text="Auto-generated Variables")
+            script_frame.pack(fill=tk.X, pady=(0, 10))
+
+            script_text = ""
+            for key, value in self.script_variables.items():
+                script_text += f"{key}: {value}\n"
+
+            script_info = ttk.Label(script_frame, text=script_text, wraplength=250, justify=tk.LEFT)
+            script_info.pack(padx=5, pady=5, anchor=tk.W)
 
         # Form for variables
         form_frame = ttk.Frame(form_container)
@@ -413,22 +427,23 @@ class TemplateDialog:
         context = {}
 
         try:
+            # Include script variables if available
+            if self.script_variables:
+                context.update(self.script_variables)
+
             # Get current values from form
-            if self.template_name == "agenda":
-                context = compute_agenda_variables()
-            else:
-                for var in template.get("variables", []):
-                    input_field = self.inputs[var["name"]]
-                    if isinstance(input_field, scrolledtext.ScrolledText):
-                        value = input_field.get("1.0", tk.END).strip()
-                    else:
-                        value = input_field.get()
+            for var in template.get("variables", []):
+                input_field = self.inputs[var["name"]]
+                if isinstance(input_field, scrolledtext.ScrolledText):
+                    value = input_field.get("1.0", tk.END).strip()
+                else:
+                    value = input_field.get()
 
-                    # If field is empty, use placeholder
-                    if not value:
-                        value = f"[{var['description']}]"
+                # If field is empty, use placeholder
+                if not value:
+                    value = f"[{var['description']}]"
 
-                    context[var["name"]] = value
+                context[var["name"]] = value
 
             # Generate preview
             segments = self.template_renderer.render_from_template(self.template_name, context)
@@ -447,10 +462,10 @@ class TemplateDialog:
 
                 # Word wrap text to match printer width
                 wrapped_text = ""
-                for line in text.split('\n'):
+                for line in text.split("\n"):
                     # Keep track of current line length
                     current_line = ""
-                    for word in line.split(' '):
+                    for word in line.split(" "):
                         # If adding this word would exceed chars_per_line
                         if len(current_line) + len(word) + 1 > self.chars_per_line:
                             # Add current line to wrapped text with tag
@@ -498,20 +513,22 @@ class TemplateDialog:
         template = self.template_manager.get_template(self.template_name)
         context = {}
 
-        if self.template_name == "agenda":
-            context = compute_agenda_variables()
-        else:
-            for var in template.get("variables", []):
-                input_field = self.inputs[var["name"]]
-                if isinstance(input_field, scrolledtext.ScrolledText):
-                    context[var["name"]] = input_field.get("1.0", tk.END).strip()
-                else:
-                    context[var["name"]] = input_field.get()
+        # Include script variables if available
+        if self.script_variables:
+            context.update(self.script_variables)
 
-                # Basic validation for required fields
-                if var.get("required", False) and not context[var["name"]]:
-                    messagebox.showerror("Error", f"Please enter {var['description']}")
-                    return
+        # Get user input values
+        for var in template.get("variables", []):
+            input_field = self.inputs[var["name"]]
+            if isinstance(input_field, scrolledtext.ScrolledText):
+                context[var["name"]] = input_field.get("1.0", tk.END).strip()
+            else:
+                context[var["name"]] = input_field.get()
+
+            # Basic validation for required fields
+            if var.get("required", False) and not context[var["name"]]:
+                messagebox.showerror("Error", f"Please enter {var['description']}")
+                return
 
         try:
             ip_address = get_printer_ip()
@@ -613,7 +630,7 @@ class SettingsDialog:
             messagebox.showinfo(
                 "Width Setting Changed",
                 "The characters per line setting has been updated. "
-                "Template previews will use this new width the next time you restart the application."
+                "Template previews will use this new width the next time you restart the application.",
             )
         except ValueError as e:
             messagebox.showerror("Error", f"Invalid number for characters per line: {e}")
