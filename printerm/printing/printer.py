@@ -79,6 +79,7 @@ class ThermalPrinter:
         """
         if not self.printer:
             raise RuntimeError("Printer connection is not open.")
+
         segments = self.template_renderer.render_from_template(template_name, context)
         self.print_segments(segments)
         self.printer.cut()

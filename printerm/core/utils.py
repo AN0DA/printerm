@@ -15,6 +15,40 @@ from printerm.templates.template_manager import TemplateManager
 logger = logging.getLogger(__name__)
 
 
+def prepare_template_context(
+    template_manager: TemplateManager, template_name: str, user_context: dict[str, Any]
+) -> dict[str, Any]:
+    """
+    Prepare complete template context by combining user-provided variables with script-generated ones.
+
+    Args:
+        template_manager: The template manager instance
+        template_name: Name of the template
+        user_context: User-provided context variables
+
+    Returns:
+        Complete context with both user and script variables
+    """
+    # Start with user context
+    context = user_context.copy()
+
+    # Try to get script variables
+    script_func = template_manager.get_template_script(template_name)
+    if script_func:
+        try:
+            # Execute the script to get pre-computed variables
+            script_vars = script_func()
+            # Only add script variables that aren't already in context
+            for key, value in script_vars.items():
+                if key not in context:
+                    context[key] = value
+            logger.debug(f"Applied script variables for template '{template_name}'")
+        except Exception as e:
+            logger.error(f"Error executing script for template '{template_name}': {e}", exc_info=True)
+
+    return context
+
+
 class TemplateRenderer:
     """
     Renders templates with context, handling Markdown formatting,
@@ -42,17 +76,8 @@ class TemplateRenderer:
         if not template:
             raise ValueError(f"Template '{template_name}' not found.")
 
-        # Check if there's a script for this template and execute it if needed
-        script_func = self.template_manager.get_template_script(template_name)
-        if script_func:
-            # Merge script-generated variables with provided context
-            # Context variables take precedence over script-generated ones
-            script_vars = script_func()
-            # Only add script variables that aren't already in context
-            for key, value in script_vars.items():
-                if key not in context:
-                    context[key] = value
-            logger.debug(f"Applied script variables for template '{template_name}'")
+        # Get complete context with script variables
+        complete_context = prepare_template_context(self.template_manager, template_name, context)
 
         segments = template.get("segments", [])
         rendered_segments = []
@@ -62,7 +87,7 @@ class TemplateRenderer:
             template_text = segment["text"]
             jinja_template = env.from_string(template_text)
             try:
-                text = jinja_template.render(**context)
+                text = jinja_template.render(**complete_context)
             except Exception as e:
                 logger.error(f"Error rendering template '{template_name}': {e}")
                 raise

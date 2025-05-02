@@ -5,10 +5,10 @@ import pytest
 
 from printerm.core.utils import (
     TemplateRenderer,
-    compute_agenda_variables,
     get_latest_version,
     is_new_version_available,
 )
+from printerm.templates.scripts.agenda import compute_variables
 from printerm.templates.template_manager import TemplateManager
 
 
@@ -70,7 +70,7 @@ def test_template_renderer_special_letters_disabled(template_manager: TemplateMa
 
 
 def test_compute_agenda_variables() -> None:
-    variables = compute_agenda_variables()
+    variables = compute_variables()
     assert "week_number" in variables
     assert "week_start_date" in variables
     assert "week_end_date" in variables

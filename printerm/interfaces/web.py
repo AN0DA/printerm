@@ -10,6 +10,7 @@ from printerm.core.config import (
     get_chars_per_line,
     get_check_for_updates,
     get_enable_special_letters,
+    get_flask_port,
     get_flask_secret_key,
     get_printer_ip,
     set_chars_per_line,
@@ -17,7 +18,7 @@ from printerm.core.config import (
     set_enable_special_letters,
     set_printer_ip,
 )
-from printerm.printing.printer import ThermalPrinter
+from printerm.interfaces.interface_utils import get_template_variables, print_rendered_template
 from printerm.templates.template_manager import TemplateManager
 
 logging.basicConfig(level=logging.INFO)
@@ -41,35 +42,33 @@ def index() -> str:
 @app.route("/print/<template_name>", methods=["GET", "POST"])
 def print_template(template_name: str) -> Response | str:
     templates = template_manager.templates
-    template = template_manager.get_template(template_name)
-    if not template:
+
+    try:
+        template = template_manager.get_template(template_name)
+    except ValueError:
         flash(f"Template '{template_name}' not found.", "error")
         return redirect(url_for("index"))
+
     if request.method == "POST":
         context = {}
         try:
-            # Check for a script for this template
-            script_func = template_manager.get_template_script(template_name)
-            if script_func:
-                # Execute the script to get pre-computed variables
-                script_vars = script_func()
-                context.update(script_vars)
-                logger.info(f"Applied script variables for template '{template_name}'")
+            # Get variable definitions and script variables
+            variable_defs, script_vars = get_template_variables(template_manager, template_name)
+            context.update(script_vars)
 
             # Add form variables if any
-            for var in template.get("variables", []):
+            for var in variable_defs:
                 context[var["name"]] = request.form.get(var["name"])
 
             # Handle templates with no variables
-            if not template.get("variables", []):
+            if not variable_defs:
                 confirm = request.form.get("confirm")
                 if confirm == "no":
                     flash(f"Cancelled printing {template_name}.", "info")
                     return redirect(url_for("index"))
 
-            ip_address = get_printer_ip()
-            with ThermalPrinter(ip_address, template_manager) as printer:
-                printer.print_template(template_name, context)
+            # Print the template
+            print_rendered_template(template_manager, template_name, context)
             flash(f"Printed using template '{template_name}'.", "success")
             return redirect(url_for("index"))
 
@@ -77,12 +76,8 @@ def print_template(template_name: str) -> Response | str:
             logger.error(f"Error printing template '{template_name}': {e}", exc_info=True)
             flash(f"Failed to print: {e}", "error")
 
-    # Check for scripted variables to display in template
-    script_variables = {}
-    script_func = template_manager.get_template_script(template_name)
-    if script_func:
-        script_variables = script_func()
-        logger.info(f"Template '{template_name}' has script variables: {list(script_variables.keys())}")
+    # Get script variables for display
+    _, script_variables = get_template_variables(template_manager, template_name)
 
     return render_template(
         "print_template.html",
@@ -151,4 +146,5 @@ def settings() -> Response | str:
 
 
 def main() -> None:
-    serve(app, host="0.0.0.0", port=5555)  # nosec: B104
+    port = get_flask_port()
+    serve(app, host="0.0.0.0", port=port)  # nosec: B104
