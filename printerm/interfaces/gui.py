@@ -2,19 +2,24 @@ import logging
 import sys
 from typing import Any
 
-from PyQt6.QtWidgets import (
-    QApplication,
-    QDialog,
-    QFormLayout,
-    QHBoxLayout,
-    QLabel,
-    QLineEdit,
-    QMessageBox,
-    QPushButton,
-    QTextEdit,
-    QVBoxLayout,
-    QWidget,
-)
+try:
+    from PyQt6.QtWidgets import (
+        QApplication,
+        QDialog,
+        QFormLayout,
+        QHBoxLayout,
+        QLabel,
+        QLineEdit,
+        QMessageBox,
+        QPushButton,
+        QTextEdit,
+        QVBoxLayout,
+        QWidget,
+    )
+
+    PYQT_AVAILABLE = True
+except ImportError:
+    PYQT_AVAILABLE = False
 
 from printerm.core.config import (
     PRINT_TEMPLATE_FOLDER,
@@ -209,6 +214,10 @@ class SettingsDialog(QDialog):
 
 
 def main() -> None:
+    if not PYQT_AVAILABLE:
+        logger.error("PyQt6 is not installed. Please install it using `pip install printerm[gui]`")
+        sys.exit(1)
+
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()
