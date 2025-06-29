@@ -22,7 +22,7 @@ class ErrorHandler:
             logger.error(f"{context}: {error}", exc_info=True)
 
     @staticmethod
-    def wrap_error(func, error_type: type[PrintermError], message: str, context: str = ""):
+    def wrap_error(func: Any, error_type: type[PrintermError], message: str, context: str = "") -> Any:
         """Wrap a function call and convert exceptions to PrintermError types."""
 
         def wrapper(*args: Any, **kwargs: Any) -> Any:

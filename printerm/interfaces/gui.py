@@ -5,7 +5,7 @@ import sys
 from typing import Any
 
 try:
-    from PyQt6.QtCore import Qt
+    from PyQt6.QtCore import Qt  # noqa: F401
     from PyQt6.QtWidgets import (
         QApplication,
         QCheckBox,
@@ -71,7 +71,7 @@ if PYQT_AVAILABLE:
             try:
                 available_templates = self.template_service.list_templates()
                 logger.debug(f"Available templates: {available_templates}")
-                
+
                 for template_name in available_templates:
                     button = QPushButton(template_name.capitalize())
                     button.clicked.connect(lambda checked, name=template_name: self.open_template_dialog(name))
@@ -104,7 +104,6 @@ if PYQT_AVAILABLE:
             except Exception as e:
                 ErrorHandler.handle_error(e, "Error opening settings dialog")
                 QMessageBox.critical(self, "Error", f"Failed to open settings dialog: {e}")
-
 
     class TemplateDialog(QDialog):
         def __init__(self, template_name: str, parent: QWidget | None = None):
@@ -151,7 +150,7 @@ if PYQT_AVAILABLE:
             try:
                 logger.info(f"Printing template: {self.template_name}")
                 context = {}
-                
+
                 # Handle agenda template specially like other interfaces
                 if self.template_name == "agenda":
                     context = compute_agenda_variables()
@@ -167,7 +166,7 @@ if PYQT_AVAILABLE:
                 # Use context manager like in CLI interface
                 with service_container.get(PrinterService) as printer:
                     printer.print_template(self.template_name, context)
-                
+
                 logger.info(f"Successfully printed template: {self.template_name}")
                 QMessageBox.information(self, "Success", f"Printed using template '{self.template_name}'.")
                 self.accept()
@@ -177,7 +176,6 @@ if PYQT_AVAILABLE:
             except Exception as e:
                 ErrorHandler.handle_error(e, f"Error printing template '{self.template_name}'")
                 QMessageBox.critical(self, "Error", f"Failed to print: {e}")
-
 
     class SettingsDialog(QDialog):
         def __init__(self, parent: QWidget | None = None):
@@ -238,7 +236,7 @@ if PYQT_AVAILABLE:
         def save_settings(self) -> None:
             try:
                 logger.info("Saving settings")
-                
+
                 # Save IP address
                 ip_address = self.ip_input.text().strip()
                 if ip_address:
@@ -266,7 +264,9 @@ if PYQT_AVAILABLE:
                 QMessageBox.information(self, "Success", "Settings saved successfully.")
                 self.accept()
             except ValueError:
-                ErrorHandler.handle_error(ValueError("Invalid number for characters per line"), "Settings validation error")
+                ErrorHandler.handle_error(
+                    ValueError("Invalid number for characters per line"), "Settings validation error"
+                )
                 QMessageBox.critical(self, "Error", "Invalid number for characters per line.")
             except PrintermError as e:
                 ErrorHandler.handle_error(e, "Error saving settings")
@@ -277,16 +277,16 @@ if PYQT_AVAILABLE:
 
 else:
     # Dummy classes for when PyQt6 is not available
-    class MainWindow:
+    class MainWindow:  # type: ignore[no-redef]
         def __init__(self) -> None:
             raise ImportError("PyQt6 is not available")
-    
-    class TemplateDialog:
-        def __init__(self, *args, **kwargs) -> None:
+
+    class TemplateDialog:  # type: ignore[no-redef]
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             raise ImportError("PyQt6 is not available")
-    
-    class SettingsDialog:
-        def __init__(self, *args, **kwargs) -> None:
+
+    class SettingsDialog:  # type: ignore[no-redef]
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             raise ImportError("PyQt6 is not available")
 
 
@@ -294,9 +294,9 @@ def main() -> None:
     """Launch the GUI application."""
     if not PYQT_AVAILABLE:
         logger.error("PyQt6 is not available")
-        print("PyQt6 is not available. Please install it with: pip install PyQt6")
+        print("PyQt6 is not available. Please install it with: pip install PyQt6")  # noqa: T201
         sys.exit(1)
-    
+
     try:
         logger.info("Launching GUI application")
         app = QApplication(sys.argv)
@@ -307,7 +307,7 @@ def main() -> None:
     except Exception as e:
         ErrorHandler.handle_error(e, "Error launching GUI")
         logger.error(f"Failed to launch GUI: {e}")
-        print(f"Failed to launch GUI: {e}")
+        print(f"Failed to launch GUI: {e}")  # noqa: T201
         sys.exit(1)
 
 
