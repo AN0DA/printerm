@@ -7,21 +7,11 @@ import click
 import typer
 
 from printerm import __version__
-from printerm.core.config import (
-    CONFIG_FILE,
-    PRINT_TEMPLATE_FOLDER,
-    get_chars_per_line,
-    get_check_for_updates,
-    get_enable_special_letters,
-    get_printer_ip,
-    set_chars_per_line,
-    set_check_for_updates,
-    set_enable_special_letters,
-    set_printer_ip,
-)
-from printerm.core.utils import compute_agenda_variables, is_new_version_available
-from printerm.printing.printer import ThermalPrinter
-from printerm.templates.template_manager import TemplateManager
+from printerm.error_handling import ErrorHandler
+from printerm.exceptions import ConfigurationError, PrintermError
+from printerm.services import service_container
+from printerm.services.interfaces import ConfigService, PrinterService, TemplateService, UpdateService
+from printerm.services.template_service import compute_agenda_variables
 
 logging.basicConfig(
     level=logging.INFO,
@@ -43,15 +33,22 @@ app.add_typer(config_app, name="config")
 
 missing_ip_message = "Printer IP address not set. Please set it using 'settings set-ip'."
 
+# Get services from container
+config_service = service_container.get(ConfigService)
+template_service = service_container.get(TemplateService)
+update_service = service_container.get(UpdateService)
+
 
 def check_for_updates_on_startup() -> None:
-    if get_check_for_updates():  # noqa: SIM102
-        if is_new_version_available(__version__):
+    try:
+        if config_service.get_check_for_updates() and update_service.is_new_version_available(__version__):
             update = typer.confirm("A new version is available. Do you want to update?")
             if update:
                 perform_update()
             else:
                 typer.echo("You can update later by running 'printerm update' command.")
+    except Exception as e:
+        ErrorHandler.handle_error(e, "Error checking for updates")
 
 
 def perform_update() -> None:
@@ -79,37 +76,36 @@ def print_template(template_name: str = typer.Argument(None)) -> None:
     """
     Print using a specified template.
     """
-    template_manager = TemplateManager(PRINT_TEMPLATE_FOLDER)
-    if not template_name:
-        typer.echo("Available templates:")
-        for name in template_manager.list_templates():
-            typer.echo(f"- {name}")
-        template_name = typer.prompt("Enter the template name")
-
-    template = template_manager.get_template(template_name)
-    if not template:
-        typer.echo(f"Template '{template_name}' not found.")
-        sys.exit(1)
-
-    context = {}
-    if template_name == "agenda":
-        context = compute_agenda_variables()
-    else:
-        for var in template.get("variables", []):
-            if var.get("markdown", False):
-                value = click.edit(var["description"], require_save=True)
-            else:
-                value = typer.prompt(var["description"])
-            context[var["name"]] = value
-
     try:
-        ip_address = get_printer_ip()
-        with ThermalPrinter(ip_address, template_manager) as printer:
+        if not template_name:
+            typer.echo("Available templates:")
+            for name in template_service.list_templates():
+                typer.echo(f"- {name}")
+            template_name = typer.prompt("Enter the template name")
+
+        template = template_service.get_template(template_name)
+
+        context = {}
+        if template_name == "agenda":
+            context = compute_agenda_variables()
+        else:
+            for var in template.get("variables", []):
+                if var.get("markdown", False):
+                    value = click.edit(var["description"], require_save=True)
+                else:
+                    value = typer.prompt(var["description"])
+                context[var["name"]] = value
+
+        with service_container.get(PrinterService) as printer:
             printer.print_template(template_name, context)
         typer.echo(f"Printed using template '{template_name}'.")
+    except PrintermError as e:
+        typer.echo(f"Failed to print: {e.message}")
+        ErrorHandler.handle_error(e, "Error printing template")
+        sys.exit(1)
     except Exception as e:
         typer.echo(f"Failed to print: {e}")
-        logger.error(f"Error printing template '{template_name}': {e}", exc_info=True)
+        ErrorHandler.handle_error(e, f"Error printing template '{template_name}'")
         sys.exit(1)
 
 
@@ -118,8 +114,13 @@ def set_ip(ip_address: str = typer.Argument(..., help="Printer IP Address")) -> 
     """
     Set the printer IP address.
     """
-    set_printer_ip(ip_address)
-    typer.echo(f"Printer IP address set to {ip_address}")
+    try:
+        config_service.set_printer_ip(ip_address)
+        typer.echo(f"Printer IP address set to {ip_address}")
+    except PrintermError as e:
+        typer.echo(f"Failed to set IP address: {e.message}")
+        ErrorHandler.handle_error(e, "Error setting IP address")
+        sys.exit(1)
 
 
 @settings_app.command("set-chars-per-line")
@@ -127,8 +128,13 @@ def set_chars_per_line_command(chars_per_line: int = typer.Argument(..., help="C
     """
     Set the number of characters per line.
     """
-    set_chars_per_line(chars_per_line)
-    typer.echo(f"Characters per line set to {chars_per_line}")
+    try:
+        config_service.set_chars_per_line(chars_per_line)
+        typer.echo(f"Characters per line set to {chars_per_line}")
+    except PrintermError as e:
+        typer.echo(f"Failed to set characters per line: {e.message}")
+        ErrorHandler.handle_error(e, "Error setting characters per line")
+        sys.exit(1)
 
 
 @settings_app.command("set-enable-special-letters")
@@ -138,8 +144,13 @@ def set_enable_special_letters_command(
     """
     Enable or disable special letters.
     """
-    set_enable_special_letters(enable)
-    typer.echo(f"Enable special letters set to {enable}")
+    try:
+        config_service.set_enable_special_letters(enable)
+        typer.echo(f"Enable special letters set to {enable}")
+    except PrintermError as e:
+        typer.echo(f"Failed to set special letters setting: {e.message}")
+        ErrorHandler.handle_error(e, "Error setting special letters")
+        sys.exit(1)
 
 
 @settings_app.command("set-check-for-updates")
@@ -149,8 +160,13 @@ def set_check_for_updates_command(
     """
     Enable or disable automatic update checking.
     """
-    set_check_for_updates(check)
-    typer.echo(f"Check for updates set to {check}")
+    try:
+        config_service.set_check_for_updates(check)
+        typer.echo(f"Check for updates set to {check}")
+    except PrintermError as e:
+        typer.echo(f"Failed to set update checking: {e.message}")
+        ErrorHandler.handle_error(e, "Error setting update checking")
+        sys.exit(1)
 
 
 @settings_app.command()
@@ -159,16 +175,23 @@ def show() -> None:
     Show current settings.
     """
     try:
-        ip_address = get_printer_ip()
-    except ValueError:
-        ip_address = "Not set"
-    chars_per_line = get_chars_per_line()
-    enable_special_letters = get_enable_special_letters()
-    check_for_updates = get_check_for_updates()
-    typer.echo(f"Printer IP Address: {ip_address}")
-    typer.echo(f"Characters Per Line: {chars_per_line}")
-    typer.echo(f"Enable Special Letters: {enable_special_letters}")
-    typer.echo(f"Check for Updates: {check_for_updates}")
+        try:
+            ip_address = config_service.get_printer_ip()
+        except ConfigurationError:
+            ip_address = "Not set"
+
+        chars_per_line = config_service.get_chars_per_line()
+        enable_special_letters = config_service.get_enable_special_letters()
+        check_for_updates = config_service.get_check_for_updates()
+
+        typer.echo(f"Printer IP Address: {ip_address}")
+        typer.echo(f"Characters Per Line: {chars_per_line}")
+        typer.echo(f"Enable Special Letters: {enable_special_letters}")
+        typer.echo(f"Check for Updates: {check_for_updates}")
+    except Exception as e:
+        typer.echo(f"Failed to show settings: {e}")
+        ErrorHandler.handle_error(e, "Error showing settings")
+        sys.exit(1)
 
 
 @app.command()
@@ -216,6 +239,8 @@ def config_edit() -> None:
     """
     Open the configuration file for editing.
     """
+    from printerm.services.config_service import CONFIG_FILE
+
     config_file_path = os.path.abspath(CONFIG_FILE)
     typer.echo(f"Opening configuration file: {config_file_path}")
     try:
@@ -229,7 +254,7 @@ def config_edit() -> None:
             subprocess.call([editor, config_file_path])  # nosec: B603
     except Exception as e:
         typer.echo(f"Failed to open configuration file: {e}")
-        logger.error(f"Error opening configuration file: {e}", exc_info=True)
+        ErrorHandler.handle_error(e, "Error opening configuration file")
         sys.exit(1)
 
 
