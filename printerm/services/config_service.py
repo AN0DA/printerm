@@ -131,3 +131,24 @@ class ConfigServiceImpl:
             config.add_section("Flask")
         config.set("Flask", "secret_key", secret_key)
         self._save_config(config)
+
+    def get_gui_recent_templates(self) -> list[str]:
+        """Get recent templates from configuration."""
+        config = self._get_config()
+        try:
+            templates_str = config.get("GUI", "recent_templates")
+            if templates_str.strip():
+                return [t.strip() for t in templates_str.split(",") if t.strip()]
+            return []
+        except (configparser.NoSectionError, configparser.NoOptionError):
+            return []  # Default value
+
+    def set_gui_recent_templates(self, templates: list[str]) -> None:
+        """Set recent templates in configuration."""
+        config = self._get_config()
+        if not config.has_section("GUI"):
+            config.add_section("GUI")
+        # Store as comma-separated string
+        templates_str = ",".join(templates[:5])  # Limit to 5 templates
+        config.set("GUI", "recent_templates", templates_str)
+        self._save_config(config)
