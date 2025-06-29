@@ -49,7 +49,7 @@ class PrinterServiceImpl:
                 styles = segment.get("styles", {})
                 logger.debug("Printing segment: %s with styles: %s", text, styles)
 
-                self._printer.set(
+                self._printer.set_with_default(
                     align=styles.get("align", "left"),
                     font=styles.get("font", "a"),
                     bold=styles.get("bold", False),
