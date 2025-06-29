@@ -307,6 +307,7 @@ if PYQT_AVAILABLE:
             self.preview_content.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
             self.preview_content.setWordWrap(True)
             self.preview_content.setFont(QFont("Courier New", 10))  # Increased from 9
+            self.preview_content.setTextFormat(Qt.TextFormat.RichText)  # Enable HTML support
 
             # Apply theme-aware styling
             self.apply_preview_theme()
@@ -333,30 +334,104 @@ if PYQT_AVAILABLE:
             """Update the preview with rendered template."""
             try:
                 rendered_segments = template_service.render_template(template_name, context)
-                preview_text = ""
-
-                for segment in rendered_segments:
-                    text = segment["text"]
-                    styles = segment.get("styles", {})
-
-                    # Add some basic formatting indicators
-                    if styles.get("bold"):
-                        text = f"**{text}**"
-                    if styles.get("align") == "center":
-                        lines = text.split("\n")
-                        centered_lines = []
-                        for line in lines:
-                            if line.strip():
-                                centered_lines.append(line.center(42))  # Reduced width
-                            else:
-                                centered_lines.append(line)
-                        text = "\n".join(centered_lines)
-
-                    preview_text += text
-
-                self.preview_content.setText(preview_text or "Preview will appear here...")
+                preview_html = self._render_preview_html(rendered_segments)
+                self.preview_content.setText(preview_html)
             except Exception as e:
-                self.preview_content.setText(f"Preview error: {str(e)}")
+                self.preview_content.setText(f"<div style='color: red;'>Preview error: {str(e)}</div>")
+
+        def _render_preview_html(self, segments: list[dict[str, Any]]) -> str:
+            """Render segments as HTML for preview with thermal printer styling."""
+            if not segments:
+                return "<div style='color: gray; font-style: italic;'>Preview will appear here...</div>"
+
+            # Get current theme colors
+            styles = ThemeManager.get_theme_styles(self.current_theme)
+
+            html_parts = []
+            html_parts.append(f"""
+                <div style='
+                    font-family: "Courier New", monospace;
+                    background-color: {styles["preview_background"]};
+                    color: {styles["text"]};
+                    padding: 12px;
+                    border: 2px solid #333;
+                    border-radius: 6px;
+                    line-height: 1.2;
+                    white-space: pre-wrap;
+                    max-width: 400px;
+                    margin: 0 auto;
+                '>
+            """)
+
+            for segment in segments:
+                text = segment["text"]
+                styles_dict = segment.get("styles", {})
+
+                # Skip completely empty segments
+                if not text:
+                    continue
+
+                # Build inline styles based on thermal printer styles
+                inline_styles = []
+
+                # Font weight and decoration
+                if styles_dict.get("bold"):
+                    inline_styles.append("font-weight: bold")
+
+                if styles_dict.get("underline"):
+                    inline_styles.append("text-decoration: underline")
+
+                if styles_dict.get("italic"):
+                    inline_styles.append("font-style: italic")
+
+                # Font size for double width/height
+                font_size = "12px"
+                if styles_dict.get("double_width") and styles_dict.get("double_height"):
+                    font_size = "18px"
+                    inline_styles.append("font-weight: bold")
+                elif styles_dict.get("double_width"):
+                    font_size = "14px"
+                elif styles_dict.get("double_height"):
+                    font_size = "16px"
+                inline_styles.append(f"font-size: {font_size}")
+
+                # Font family for different printer fonts
+                font_family = '"Courier New", monospace'
+                if styles_dict.get("font") == "b":
+                    font_family = '"Lucida Console", monospace'
+                inline_styles.append(f"font-family: {font_family}")
+
+                # Text alignment
+                align = styles_dict.get("align", "left")
+                if align == "center":
+                    inline_styles.append("text-align: center")
+                elif align == "right":
+                    inline_styles.append("text-align: right")
+
+                # Background inversion for thermal printer invert style
+                if styles_dict.get("invert"):
+                    inline_styles.append("background-color: black")
+                    inline_styles.append("color: white")
+                    inline_styles.append("padding: 2px 4px")
+
+                # Escape HTML in text content
+                escaped_text = (
+                    text.replace("&", "&amp;")
+                    .replace("<", "&lt;")
+                    .replace(">", "&gt;")
+                    .replace('"', "&quot;")
+                    .replace("'", "&#x27;")
+                )
+
+                # Convert line breaks to proper HTML
+                escaped_text = escaped_text.replace("\n", "<br>")
+
+                # Apply styles
+                style_attr = "; ".join(inline_styles)
+                html_parts.append(f'<span style="{style_attr}">{escaped_text}</span>')
+
+            html_parts.append("</div>")
+            return "".join(html_parts)
 
         def update_theme(self, theme: str) -> None:
             """Update the theme of the preview widget."""
