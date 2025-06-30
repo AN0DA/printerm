@@ -1,0 +1,44 @@
+name: Date Info
+description: Print current date and time information
+script: date_utils
+variables: []
+segments:
+  - text: "📅 DATE INFO\n"
+    markdown: false
+    styles:
+      align: center
+      font: a
+      bold: true
+      double_width: true
+      double_height: true
+  - text: "{{ date_full }}\n"
+    markdown: false
+    styles:
+      align: center
+      font: a
+      bold: true
+  - text: "Time: {{ current_time }}\n"
+    markdown: false
+    styles:
+      align: center
+      font: a
+  - text: "-----------------------\n"
+    markdown: false
+    styles:
+      align: center
+      font: a
+  - text: "Week #{{ week_number }} of {{ year }}\n"
+    markdown: false
+    styles:
+      align: left
+      font: a
+  - text: "Yesterday: {{ yesterday }}\n"
+    markdown: false
+    styles:
+      align: left
+      font: a
+  - text: "Tomorrow: {{ tomorrow }}\n"
+    markdown: false
+    styles:
+      align: left
+      font: a

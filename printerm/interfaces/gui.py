@@ -36,7 +36,6 @@ from printerm.error_handling import ErrorHandler
 from printerm.exceptions import ConfigurationError, PrintermError
 from printerm.services import service_container
 from printerm.services.interfaces import ConfigService, PrinterService, TemplateService
-from printerm.services.template_service import compute_agenda_variables
 
 # Configure logging for GUI interface
 logging.basicConfig(
@@ -608,15 +607,16 @@ if PYQT_AVAILABLE:
             """Get current context from input fields."""
             context = {}
 
-            # Handle agenda template specially
-            if self.template_name == "agenda":
-                context = compute_agenda_variables()
-            else:
-                for var_name, input_field in self.inputs.items():
-                    if isinstance(input_field, QTextEdit):
-                        context[var_name] = input_field.toPlainText()
-                    else:
-                        context[var_name] = input_field.text()
+            # Check if template has a script
+            with service_container.get(TemplateService) as template_service:
+                if template_service.has_script(self.template_name):
+                    context = template_service.generate_template_context(self.template_name)
+                else:
+                    for var_name, input_field in self.inputs.items():
+                        if isinstance(input_field, QTextEdit):
+                            context[var_name] = input_field.toPlainText()
+                        else:
+                            context[var_name] = input_field.text()
 
             return context
 

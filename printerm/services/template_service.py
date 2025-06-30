@@ -1,6 +1,5 @@
 """Template service implementation."""
 
-import datetime
 import logging
 import os
 import textwrap
@@ -16,6 +15,8 @@ from unidecode import unidecode
 
 from printerm.exceptions import TemplateError
 from printerm.printing.markdown_renderer import PrinterRenderer
+from printerm.templates.scripts import ScriptRegistry
+from printerm.templates.scripts.script_loader import TemplateScriptError
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,7 @@ class TemplateServiceImpl:
         self.template_dir = template_dir
         self.config_service = config_service
         self.templates: dict[str, dict[str, Any]] = {}
+        self.script_registry = ScriptRegistry(config_service=config_service)
         self.load_templates()
 
     def load_templates(self) -> None:
@@ -64,8 +66,23 @@ class TemplateServiceImpl:
         """List all available template names."""
         return list(self.templates.keys())
 
-    def render_template(self, template_name: str, context: dict[str, Any]) -> list[dict[str, Any]]:
-        """Render a template with the given context."""
+    def render_template(
+        self, template_name: str, context: dict[str, Any] | None = None, **script_kwargs: Any
+    ) -> list[dict[str, Any]]:
+        """Render a template with the given context or auto-generated context.
+
+        Args:
+            template_name: Name of the template to render
+            context: Optional manual context. If None, will try to generate using scripts
+            **script_kwargs: Additional parameters to pass to template scripts
+
+        Returns:
+            List of rendered segments
+        """
+        # Generate context if not provided
+        if context is None:
+            context = self.generate_template_context(template_name, **script_kwargs)
+
         template = self.get_template(template_name)
 
         # Get configuration settings
@@ -119,22 +136,95 @@ class TemplateServiceImpl:
                 raise
             raise TemplateError(f"Failed to render template '{template_name}'", str(e)) from e
 
+    def generate_template_context(
+        self, template_name: str, manual_context: dict[str, Any] | None = None, **script_kwargs: Any
+    ) -> dict[str, Any]:
+        """Generate context for template rendering using scripts or manual input.
 
-def compute_agenda_variables() -> dict[str, Any]:
-    """Compute variables for agenda template."""
-    today = datetime.date.today()
-    _, week_number, _ = today.isocalendar()
-    week_start = today - datetime.timedelta(days=today.weekday())
-    week_end = week_start + datetime.timedelta(days=6)
-    days = []
-    for i in range(7):
-        day_date = week_start + datetime.timedelta(days=i)
-        day_name = day_date.strftime("%A")
-        date_str = day_date.strftime("%Y-%m-%d")
-        days.append({"day_name": day_name, "date": date_str})
-    return {
-        "week_number": week_number,
-        "week_start_date": week_start.strftime("%Y-%m-%d"),
-        "week_end_date": week_end.strftime("%Y-%m-%d"),
-        "days": days,
-    }
+        Args:
+            template_name: Name of the template
+            manual_context: Manually provided context variables (optional)
+            **script_kwargs: Additional parameters to pass to template scripts
+
+        Returns:
+            Dictionary of context variables for template rendering
+
+        Raises:
+            TemplateError: If context generation fails
+        """
+        template = self.get_template(template_name)
+
+        # Check if template has a script defined
+        script_name = template.get("script")
+        if script_name:
+            try:
+                # Use script to generate context
+                logger.debug(f"Using script '{script_name}' for template '{template_name}'")
+                context = self.script_registry.execute_script(script_name, **script_kwargs)
+
+                # Merge with any manual context provided
+                if manual_context:
+                    context.update(manual_context)
+
+                return context
+
+            except TemplateScriptError as e:
+                raise TemplateError(f"Script execution failed for template '{template_name}'", str(e)) from e
+            except Exception as e:
+                logger.warning(f"Script '{script_name}' failed, falling back to manual input: {e}")
+
+        # Fall back to manual context if no script or script failed
+        if manual_context is None:
+            manual_context = {}
+
+        return manual_context
+
+    def get_template_variables(self, template_name: str) -> list[dict[str, Any]]:
+        """Get variables required for a template.
+
+        Args:
+            template_name: Name of the template
+
+        Returns:
+            List of variable definitions with name, description, required, etc.
+        """
+        template = self.get_template(template_name)
+        return template.get("variables", [])
+
+    def has_script(self, template_name: str) -> bool:
+        """Check if a template has an associated script.
+
+        Args:
+            template_name: Name of the template
+
+        Returns:
+            True if template has a script, False otherwise
+        """
+        template = self.get_template(template_name)
+        script_name = template.get("script")
+        return script_name is not None and self.script_registry.has_script(script_name)
+
+    def get_script_info(self, template_name: str) -> dict[str, Any] | None:
+        """Get information about a template's script.
+
+        Args:
+            template_name: Name of the template
+
+        Returns:
+            Script information dictionary or None if no script
+        """
+        template = self.get_template(template_name)
+        script_name = template.get("script")
+
+        if script_name and self.script_registry.has_script(script_name):
+            return self.script_registry.get_script_info(script_name)
+
+        return None
+
+    def list_available_scripts(self) -> dict[str, str]:
+        """List all available template scripts.
+
+        Returns:
+            Dictionary mapping script names to descriptions
+        """
+        return self.script_registry.list_scripts()

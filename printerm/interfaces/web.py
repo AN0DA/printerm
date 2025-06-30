@@ -9,7 +9,6 @@ from printerm.error_handling import ErrorHandler
 from printerm.exceptions import ConfigurationError, PrintermError
 from printerm.services import service_container
 from printerm.services.interfaces import ConfigService, PrinterService, TemplateService
-from printerm.services.template_service import compute_agenda_variables
 
 logger = logging.getLogger(__name__)
 
@@ -39,17 +38,17 @@ def print_template(template_name: str) -> Response | str:
         if request.method == "POST":
             context = {}
             try:
-                match template_name:
-                    case "agenda":
-                        context = compute_agenda_variables()
-                    case _:
-                        context = {var["name"]: request.form.get(var["name"]) for var in template.get("variables", [])}
+                # Check if template has a script
+                if template_service.has_script(template_name):
+                    context = template_service.generate_template_context(template_name)
+                else:
+                    context = {var["name"]: request.form.get(var["name"]) for var in template.get("variables", [])}
 
-                        if not context:
-                            confirm = request.form.get("confirm")
-                            if confirm == "no":
-                                flash(f"Cancelled printing {template_name}.", "info")
-                                return redirect(url_for("index"))
+                    if not context:
+                        confirm = request.form.get("confirm")
+                        if confirm == "no":
+                            flash(f"Cancelled printing {template_name}.", "info")
+                            return redirect(url_for("index"))
 
                 with service_container.get(PrinterService) as printer:
                     printer.print_template(template_name, context)

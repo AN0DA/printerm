@@ -1,0 +1,32 @@
+name: Shopping List
+description: Print a formatted shopping list with checkboxes
+script: shopping_list
+variables:
+  - name: items
+    description: List of items to shop for
+    required: true
+    markdown: false
+  - name: title
+    description: Title for your shopping list
+    required: false
+    markdown: false
+segments:
+  - text: "{{ title }}\n"
+    markdown: false
+    styles:
+      align: center
+      font: a
+      bold: true
+      double_width: true
+      double_height: true
+  - text: "{{ formatted_list }}\n"
+    markdown: false
+    styles:
+      align: left
+      font: a
+  - text: "\n--- END OF LIST ---\nTotal items: {{ total_items }}\n"
+    markdown: false
+    styles:
+      align: center
+      font: a
+      bold: true

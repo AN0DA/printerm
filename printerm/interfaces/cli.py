@@ -13,7 +13,6 @@ from printerm.error_handling import ErrorHandler
 from printerm.exceptions import ConfigurationError, PrintermError
 from printerm.services import service_container
 from printerm.services.interfaces import ConfigService, PrinterService, TemplateService, UpdateService
-from printerm.services.template_service import compute_agenda_variables
 
 logging.basicConfig(
     level=logging.INFO,
@@ -139,9 +138,14 @@ def print_template(
         template = template_service.get_template(template_name)
 
         context = {}
-        if template_name == "agenda":
-            context = compute_agenda_variables()
+        template = template_service.get_template(template_name)
+
+        # Check if template has a script
+        if template_service.has_script(template_name):
+            # Use script to generate context
+            context = template_service.generate_template_context(template_name)
         else:
+            # Manual input for variables
             for var in template.get("variables", []):
                 if var.get("markdown", False):
                     value = click.edit(var["description"], require_save=True)
