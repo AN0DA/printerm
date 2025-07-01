@@ -608,15 +608,15 @@ if PYQT_AVAILABLE:
             context = {}
 
             # Check if template has a script
-            with service_container.get(TemplateService) as template_service:
-                if template_service.has_script(self.template_name):
-                    context = template_service.generate_template_context(self.template_name)
-                else:
-                    for var_name, input_field in self.inputs.items():
-                        if isinstance(input_field, QTextEdit):
-                            context[var_name] = input_field.toPlainText()
-                        else:
-                            context[var_name] = input_field.text()
+            template_service = service_container.get(TemplateService)
+            if template_service.has_script(self.template_name):
+                context = template_service.generate_template_context(self.template_name)
+            else:
+                for var_name, input_field in self.inputs.items():
+                    if isinstance(input_field, QTextEdit):
+                        context[var_name] = input_field.toPlainText()
+                    else:
+                        context[var_name] = input_field.text()
 
             return context
 
