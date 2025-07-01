@@ -25,6 +25,8 @@ class UpdateServiceImpl:
                 return data["info"]["version"]
             else:
                 raise NetworkError(f"Failed to fetch latest version: HTTP {response.status_code}")
+        except NetworkError:
+            raise  # Re-raise NetworkError without wrapping
         except requests.RequestException as e:
             raise NetworkError("Failed to fetch latest version from PyPI", str(e)) from e
         except Exception as e:
