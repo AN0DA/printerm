@@ -11,6 +11,28 @@ on:
       - 'Dockerfile'
       - '.github/workflows/build-docker.yml'
   workflow_call:
+    inputs:
+      release_version:
+        description: 'Release version for tagging'
+        required: false
+        type: string
+      is_release:
+        description: 'Whether this is a release build'
+        required: false
+        type: boolean
+        default: false
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Docker tag to use (e.g., test, v1.0.0, latest)'
+        required: true
+        default: 'test'
+        type: string
+      push_to_registry:
+        description: 'Push to registry'
+        required: true
+        default: true
+        type: boolean
 
 env:
   REGISTRY: ghcr.io
@@ -31,6 +53,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to GitHub Container Registry
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.push_to_registry }}
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -43,13 +66,13 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            # For main branch pushes - tag as 'main'
-            type=raw,value=main,enable={{is_default_branch}}
+            # For main branch pushes - tag as 'main'  
+            type=raw,value=main,enable=${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
             # For releases - version tag and latest
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=raw,value=latest,enable=${{ github.event_name == 'release' }}
+            type=raw,value=${{ inputs.release_version }},enable=${{ inputs.is_release && inputs.release_version != '' }}
+            type=raw,value=latest,enable=${{ inputs.is_release }}
+            # For manual dispatch - use custom tag
+            type=raw,value=${{ inputs.tag }},enable=${{ github.event_name == 'workflow_dispatch' }}
           labels: |
             org.opencontainers.image.title=Printerm
             org.opencontainers.image.description=A printing terminal application
@@ -59,7 +82,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          push: true
+          push: ${{ github.event_name != 'workflow_dispatch' || inputs.push_to_registry }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
@@ -68,18 +91,19 @@ jobs:
           sbom: true
 
       - name: Run Trivy vulnerability scanner
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.push_to_registry }}
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event_name == 'release' && 'latest' || 'main' }}
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event_name == 'workflow_dispatch' && inputs.tag || (inputs.is_release && 'latest' || 'main') }}
           format: 'sarif'
           output: 'trivy-results.sarif'
 
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
-        if: always()
+        if: always() && (github.event_name != 'workflow_dispatch' || inputs.push_to_registry)
         with:
           sarif_file: 'trivy-results.sarif'
 
       - name: Logout from GitHub Container Registry
-        if: always()
+        if: always() && (github.event_name != 'workflow_dispatch' || inputs.push_to_registry)
         run: docker logout ${{ env.REGISTRY }}

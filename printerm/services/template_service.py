@@ -14,7 +14,7 @@ from mistune import Markdown
 from unidecode import unidecode
 
 from printerm.exceptions import TemplateError
-from printerm.printing.markdown_renderer import PrinterRenderer
+from printerm.services.markdown_renderer import PrinterRenderer
 from printerm.templates.scripts import ScriptRegistry
 from printerm.templates.scripts.script_loader import TemplateScriptError
 
