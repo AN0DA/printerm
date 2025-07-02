@@ -252,6 +252,9 @@ jobs:
       - Semantic-release
     if: needs.Semantic-release.outputs.new_release_published == 'true'
     uses: ./.github/workflows/build-docker.yml
+    with:
+      release_version: ${{ needs.Semantic-release.outputs.new_release_version }}
+      is_release: true
     permissions:
       contents: read
       packages: write
