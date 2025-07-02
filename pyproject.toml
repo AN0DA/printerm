@@ -106,6 +106,9 @@ testpaths = ["test"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+markers = [
+    "gui: marks tests as GUI tests (deselected in CI/CD)",
+]
 filterwarnings = [
     "error",
     "ignore::UserWarning",

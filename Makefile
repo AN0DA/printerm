@@ -16,6 +16,8 @@ mypy:
 test:
 	uv run pytest --cov --cov-report term-missing:skip-covered
 
+test-ci:
+	uv run pytest --cov --cov-report term-missing:skip-covered -m "not gui"
 
 # Cleanup
 clean:
@@ -31,6 +33,7 @@ help:
 	@echo "  all           - Run linting, type checking, and tests"
 	@echo "  lint          - Run code formatting and linting"
 	@echo "  mypy          - Run type checking"
-	@echo "  test          - Run tests with coverage"
+	@echo "  test          - Run all tests with coverage"
+	@echo "  test-ci       - Run CI tests (excluding GUI tests)"
 	@echo "  clean         - Remove test artifacts"
 	@echo "  help          - Show this help"

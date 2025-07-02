@@ -1,4 +1,9 @@
-"""Tests for GUI interface."""
+"""Tests for GUI interface.
+
+All test classes in this file are marked with @pytest.mark.gui to exclude them
+from CI/CD pipelines where GUI dependencies are not available.
+Use 'pytest -m gui' to run only GUI tests or 'pytest -m "not gui"' to exclude them.
+"""
 
 from unittest.mock import MagicMock, Mock, patch
 
@@ -22,6 +27,7 @@ with patch.dict(
     )
 
 
+@pytest.mark.gui
 class TestGuiSettings:
     """Test cases for GuiSettings class."""
 
@@ -103,6 +109,7 @@ class TestGuiSettings:
         assert result == []  # Should return empty list on error
 
 
+@pytest.mark.gui
 class TestThemeManager:
     """Test cases for ThemeManager class."""
 
@@ -115,6 +122,7 @@ class TestThemeManager:
         assert theme in ["light", "dark", "auto"] or theme  # Should be non-empty
 
 
+@pytest.mark.gui
 class TestGUIInterface:
     """Test cases for GUI interface."""
 

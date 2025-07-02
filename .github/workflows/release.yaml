@@ -84,7 +84,7 @@ jobs:
         run: uv sync --all-groups
 
       - name: Run Python tests
-        run: uv run coverage run -m pytest --junitxml=./test_results.xml
+        run: uv run coverage run -m pytest --junitxml=./test_results.xml -m "not gui"
 
       - name: Publish test results to GitHub
         uses: EnricoMi/publish-unit-test-result-action@v2

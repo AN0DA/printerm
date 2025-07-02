@@ -29,19 +29,19 @@ class TestCLI:
         assert "printerm setup init" in result.stdout
         assert "first time" in result.stdout
 
-    @patch("printerm.interfaces.cli.service_container")
-    @patch("printerm.interfaces.cli.show_status")
-    def test_main_callback_existing_user(self, mock_status: MagicMock, mock_container: MagicMock) -> None:
+    @patch("printerm.interfaces.cli.config_service")
+    def test_main_callback_existing_user(self, mock_config: MagicMock) -> None:
         """Test main callback behavior for existing users."""
         # Mock config service to return valid IP
-        mock_config = Mock()
         mock_config.get_printer_ip.return_value = "192.168.1.100"
-        mock_container.get.return_value = mock_config
 
-        self.runner.invoke(app, [])
+        # Run the main command without subcommand (should invoke status)
+        result = self.runner.invoke(app, [])
 
-        # Should invoke status command
-        mock_status.assert_called_once()
+        # Should show status information and not show first-time user message
+        assert result.exit_code == 0
+        assert "Printerm Status" in result.stdout
+        assert "first time" not in result.stdout
 
     def test_suggest_similar_templates_found(self) -> None:
         """Test template suggestion with close matches."""
@@ -263,15 +263,12 @@ class TestCLI:
         assert result.exit_code == 0
         mock_config.set_printer_ip.assert_called_with("192.168.1.100")
 
-    @patch("printerm.interfaces.cli.service_container")
-    def test_setup_init_command_existing_user_no_change(self, mock_container: MagicMock) -> None:
+    @patch("printerm.interfaces.cli.config_service")
+    def test_setup_init_command_existing_user_no_change(self, mock_config: MagicMock) -> None:
         """Test setup init command for existing user who doesn't want to change."""
-        mock_config = Mock()
         mock_config.get_printer_ip.return_value = "192.168.1.100"
 
-        mock_container.get.return_value = mock_config
-
-        # User chooses not to change IP
+        # User chooses not to change IP (should return early)
         result = self.runner.invoke(
             app,
             ["setup", "init"],
