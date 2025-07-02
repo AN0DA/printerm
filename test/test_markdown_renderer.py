@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 from mistune import BlockState
 
-from printerm.printing.markdown_renderer import PrinterRenderer
+from printerm.services.markdown_renderer import PrinterRenderer
 
 
 class TestPrinterRenderer:
