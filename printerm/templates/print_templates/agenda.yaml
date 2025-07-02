@@ -1,5 +1,6 @@
 name: Weekly Agenda
 description: Print a ready-to-fill agenda for the current week.
+script: agenda_generator
 variables: []
 segments:
   - text: "Week {{ week_number }}\n"

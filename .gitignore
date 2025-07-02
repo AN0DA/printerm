@@ -166,3 +166,5 @@ cython_debug/
 
 # Aider
 .aider*
+test_reports/
+.ruff_cache/

@@ -1,30 +1,307 @@
 {% extends "base.html" %}
+
+{% block title %}Print {{ template.name }} - Thermal Printer App{% endblock %}
+
 {% block content %}
-<h2>Print {{ template.name }}</h2>
+<div class="row g-4">
+    <!-- Left Column: Template Form -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title mb-0">
+                    <i class="bi bi-file-text text-primary"></i> {{ template.name }}
+                </h3>
+                {% if template.description %}
+                <p class="text-secondary mb-0 mt-1">{{ template.description }}</p>
+                {% endif %}
+            </div>
+            
+            <div class="card-body">
+                {% if has_script %}
+                <div class="alert alert-info">
+                    <i class="bi bi-code-square"></i> This template uses a script to generate content automatically.
+                </div>
+                <form method="post" id="templateForm">
+                    <button type="submit" class="btn btn-success btn-lg w-100">
+                        <i class="bi bi-printer"></i> 
+                        <span class="btn-text">Print {{ template.name }}</span>
+                        <div class="spinner-border spinner-border-sm loading-spinner ms-2" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </button>
+                </form>
+                {% elif template.variables %}
+                <form method="post" id="templateForm">
+                    {% for var in template.variables %}
+                    <div class="mb-3">
+                        <label for="{{ var.name }}" class="form-label">
+                            {{ var.description or var.name }}
+                            {% if var.get('required', True) %}
+                            <span class="text-danger">*</span>
+                            {% endif %}
+                        </label>
 
-{% if template.variables %}
-<form method="post">
-    {% for var in template.variables %}
-    <div class="mb-3">
-        <label for="{{ var.name }}" class="form-label">{{ var.description }}:</label>
-
-        {% if var.markdown %}
-        <textarea name="{{ var.name }}" id="{{ var.name }}" class="form-control" required></textarea>
-        {% else %}
-        <input type="text" name="{{ var.name }}" id="{{ var.name }}" class="form-control" required>
-        {% endif %}
+                        {% if var.get('markdown', False) %}
+                        <textarea name="{{ var.name }}" 
+                                  id="{{ var.name }}" 
+                                  class="form-control template-input" 
+                                  rows="4"
+                                  placeholder="Enter {{ var.description or var.name }}{{ ' (required)' if var.get('required', True) else ' (optional)' }}"
+                                  {% if var.get('required', True) %}required{% endif %}></textarea>
+                        <small class="form-text text-secondary">
+                            <i class="bi bi-markdown"></i> Markdown supported
+                        </small>
+                        {% else %}
+                        <input type="text" 
+                               name="{{ var.name }}" 
+                               id="{{ var.name }}" 
+                               class="form-control template-input"
+                               placeholder="Enter {{ var.description or var.name }}{{ ' (required)' if var.get('required', True) else ' (optional)' }}"
+                               {% if var.get('required', True) %}required{% endif %}>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-outline-primary" id="validateBtn">
+                            <i class="bi bi-check-circle"></i>
+                            <span class="btn-text">Validate Template</span>
+                            <div class="spinner-border spinner-border-sm loading-spinner ms-2" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </button>
+                        
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="bi bi-printer"></i>
+                            <span class="btn-text">Print {{ template.name }}</span>
+                            <div class="spinner-border spinner-border-sm loading-spinner ms-2" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </button>
+                    </div>
+                </form>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-check-circle-fill text-success fs-1 mb-3"></i>
+                    <h5>Ready to Print</h5>
+                    <p class="text-secondary">This template doesn't require any variables.</p>
+                    
+                    <form method="post" class="mt-4">
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                            <button name="confirm" value="no" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </button>
+                            <button name="confirm" value="yes" class="btn btn-success btn-lg">
+                                <i class="bi bi-printer"></i> Print Now
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <div class="mt-3">
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Templates
+            </a>
+        </div>
     </div>
-    {% endfor %}
-    <button type="submit" class="btn btn-primary">Print</button>
-</form>
-{% else %}
-<div class="card-body">
-    <p class="card-text">Do you want to print {{ template.name }}?</p>
-    <form method="post" class="d-inline">
-        <button name="confirm" value="yes" class="btn btn-primary">Yes</button>
-        <button name="confirm" value="no" class="btn btn-secondary">No</button>
-    </form>
+    
+    <!-- Right Column: Preview -->
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-eye text-primary"></i> Preview
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="previewContainer" class="preview-container">
+                    <div class="text-center text-secondary py-4">
+                        <i class="bi bi-hourglass-split fs-1 mb-3"></i>
+                        <p>Fill in the template variables to see a preview</p>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <small class="text-secondary">
+                        <i class="bi bi-info-circle"></i> 
+                        This preview shows how your content will appear when printed
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-{% endif %}
 
+<!-- Validation Results Modal -->
+<div class="modal fade" id="validationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-check-circle text-success"></i> Validation Results
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="validationResults">
+                <!-- Validation results will be populated here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let previewUpdateTimeout;
+    const templateName = '{{ template_name }}';
+    const hasScript = {{ 'true' if has_script else 'false' }};
+    
+    function getFormData() {
+        const formData = {};
+        document.querySelectorAll('.template-input').forEach(input => {
+            formData[input.name] = input.value;
+        });
+        return formData;
+    }
+    
+    function updatePreview() {
+        const previewContainer = document.getElementById('previewContainer');
+        
+        // Don't update preview for templates with scripts
+        if (hasScript) {
+            previewContainer.innerHTML = `
+                <div class="text-center text-info py-4">
+                    <i class="bi bi-code-square fs-1 mb-3"></i>
+                    <p>This template uses a script to generate content automatically.</p>
+                    <p class="small text-secondary">Preview will be available after printing.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        const formData = getFormData();
+        
+        // Show loading state
+        previewContainer.innerHTML = `
+            <div class="text-center text-secondary py-4">
+                <div class="spinner-border mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p>Generating preview...</p>
+            </div>
+        `;
+        
+        makeApiCall(`/api/preview/${templateName}`, formData)
+            .then(data => {
+                if (data.success) {
+                    const preview = data.preview || '';
+                    if (preview.trim()) {
+                        previewContainer.innerHTML = '<pre>' + preview + '</pre>';
+                    } else {
+                        previewContainer.innerHTML = `
+                            <div class="text-center text-secondary py-4">
+                                <i class="bi bi-file-text fs-1 mb-3"></i>
+                                <p>Template preview is empty</p>
+                                <p class="small">Fill in the variables to see content</p>
+                            </div>
+                        `;
+                    }
+                } else {
+                    previewContainer.innerHTML = `
+                        <div class="text-center text-danger py-4">
+                            <i class="bi bi-exclamation-triangle fs-1 mb-3"></i>
+                            <p>Error generating preview:</p>
+                            <p class="small">${data.error}</p>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Preview error:', error);
+                previewContainer.innerHTML = `
+                    <div class="text-center text-warning py-4">
+                        <i class="bi bi-wifi-off fs-1 mb-3"></i>
+                        <p>Unable to generate preview</p>
+                        <p class="small">Check your connection and try again</p>
+                    </div>
+                `;
+            });
+    }
+    
+    function validateTemplate() {
+        const validateBtn = document.getElementById('validateBtn');
+        if (!validateBtn) return;
+        
+        showLoading(validateBtn);
+        
+        const formData = getFormData();
+        
+        makeApiCall(`/api/validate/${templateName}`, formData)
+            .then(data => {
+                hideLoading(validateBtn);
+                
+                const modalBody = document.getElementById('validationResults');
+                
+                if (data.valid) {
+                    modalBody.innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle"></i> ${data.message}
+                        </div>
+                    `;
+                } else {
+                    const errorList = data.errors.map(error => `<li>${error}</li>`).join('');
+                    modalBody.innerHTML = `
+                        <div class="alert alert-danger">
+                            <h6><i class="bi bi-exclamation-triangle"></i> Validation Errors:</h6>
+                            <ul class="mb-0">${errorList}</ul>
+                        </div>
+                    `;
+                }
+                
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('validationModal'));
+                modal.show();
+            })
+            .catch(error => {
+                hideLoading(validateBtn);
+                console.error('Validation error:', error);
+            });
+    }
+    
+    // Set up event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-update preview when inputs change
+        document.querySelectorAll('.template-input').forEach(input => {
+            input.addEventListener('input', function() {
+                clearTimeout(previewUpdateTimeout);
+                previewUpdateTimeout = setTimeout(updatePreview, 500); // Debounce updates
+            });
+        });
+        
+        // Validation button
+        const validateBtn = document.getElementById('validateBtn');
+        if (validateBtn) {
+            validateBtn.addEventListener('click', validateTemplate);
+        }
+        
+        // Form submission
+        const form = document.getElementById('templateForm');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const submitBtn = form.querySelector('button[type="submit"]');
+                showLoading(submitBtn);
+            });
+        }
+        
+        // Initial preview update
+        updatePreview();
+    });
+</script>
 {% endblock %}

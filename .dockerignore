@@ -1,0 +1,60 @@
+# Git
+.git
+.gitignore
+
+# CI/CD
+.github
+
+# Documentation
+docs/
+CHANGELOG.md
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+env/
+venv/
+ENV/
+
+# Testing
+test/
+test_reports/
+htmlcov/
+.coverage
+coverage.xml
+.pytest_cache/
+.tox/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Logs
+*.log
+app.log
+
+# Quality tools
+.mypy_cache/
+.ruff_cache/
+
+# Other
+qodana.yaml
+Makefile
+CHANGELOG.md
+LICENSE
+git-conventional-commits.yaml
