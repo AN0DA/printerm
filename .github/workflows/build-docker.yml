@@ -10,8 +10,7 @@ on:
       - 'uv.lock'
       - 'Dockerfile'
       - '.github/workflows/build-docker.yml'
-  release:
-    types: [published]
+  workflow_call:
 
 env:
   REGISTRY: ghcr.io

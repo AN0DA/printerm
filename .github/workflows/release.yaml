@@ -245,3 +245,14 @@ jobs:
           echo "::notice::Changes committed and pushed; pull request created."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  Build-Docker:
+    name: Build and push Docker image
+    needs:
+      - Semantic-release
+    if: needs.Semantic-release.outputs.new_release_published == 'true'
+    uses: ./.github/workflows/build-docker.yml
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
