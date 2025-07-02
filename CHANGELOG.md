@@ -1,3 +1,25 @@
+# [1.2.0](https://github.com/AN0DA/printerm/compare/v1.1.1...v1.2.0) (2025-07-02)
+
+
+### Bug Fixes
+
+* Re-raise NetworkError without wrapping in get_latest_version method ([79675f2](https://github.com/AN0DA/printerm/commit/79675f24624c9149bc2b7d0bd671bd141c6b4390))
+* Template context generation logic in TemplatePreview ([520de2d](https://github.com/AN0DA/printerm/commit/520de2de595bee0abb81faea042ef3716b1e4f1f))
+* Update python-escpos dependency extras ([1f6c478](https://github.com/AN0DA/printerm/commit/1f6c4788bcde6f24a5205bdaae4f45b91b8548b2))
+* update version fetching to use PyPI and improve error handling ([8c70166](https://github.com/AN0DA/printerm/commit/8c7016649b9fb745bde785cf85a85ffac28d1706))
+
+
+### Features
+
+* add Dockerfile for application containerization ([c58bdd6](https://github.com/AN0DA/printerm/commit/c58bdd6add2e0402ebd0bdd71699a146e96d33cf))
+* Enhance markdown rendering ([3ec1077](https://github.com/AN0DA/printerm/commit/3ec10772520f758e04fa0b53c0c1b8fb9ebff5de))
+* Enhance template preview with HTML rendering and styling support ([7115952](https://github.com/AN0DA/printerm/commit/71159520b657b9d7933eb1d63be50cba688b496f))
+* Implement template scripts system for dynamic context generation ([84b5456](https://github.com/AN0DA/printerm/commit/84b5456bd2ef29b8479eb3bd6b6308b4cc65458f))
+* Improve GUI design and capabilites ([b40e25f](https://github.com/AN0DA/printerm/commit/b40e25fd9663963bda8219f4e60820c0a2cbbaaa))
+* Improve web interface UX ([4030ddf](https://github.com/AN0DA/printerm/commit/4030ddffd0f1e353d5374f2696715db7bc1596eb))
+* restructure CLI for improved user experience and add template suggestions ([f4a05d5](https://github.com/AN0DA/printerm/commit/f4a05d5d276fb8b9a5241d5b92ef53a89a35751c))
+* update dependencies to python-escpos[all] and remove obsolete packages ([826a13b](https://github.com/AN0DA/printerm/commit/826a13b0dac70e54f463b9a0ffa4dfd34921bf4d))
+
 ## [1.1.1](https://github.com/AN0DA/printerm/compare/v1.1.0...v1.1.1) (2025-03-21)
 
 
