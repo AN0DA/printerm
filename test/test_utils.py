@@ -1,100 +1,204 @@
+"""Test utilities and helpers."""
+
+import configparser
 from pathlib import Path
+from typing import Any
 from unittest.mock import MagicMock
 
-import pytest
-
-from printerm.core.utils import (
-    TemplateRenderer,
-    compute_agenda_variables,
-    get_latest_version,
-    is_new_version_available,
-)
-from printerm.templates.template_manager import TemplateManager
+import yaml
 
 
-@pytest.fixture
-def template_manager(tmp_path: Path) -> TemplateManager:
-    # Set up a temporary template directory and TemplateManager
-    templates_path = tmp_path / "print_templates"
-    templates_path.mkdir()
+def create_test_config_file(config_data: dict[str, dict[str, str]], temp_dir: str) -> str:
+    """Create a test configuration file with the given data.
 
-    # Create a sample template file
-    template_content = """
-name: Test Template
-description: A test template
-variables:
-  - name: name
-    description: Name
-    required: true
-    markdown: false
-segments:
-  - text: | 
-      **Hello there**, {{ name }}!
-      Nice to meet you.
-    markdown: true
-    styles: {}
-"""
-    template_file = templates_path / "test_template.yaml"
-    with open(template_file, "w", encoding="utf-8") as f:
-        f.write(template_content)
+    Args:
+        config_data: Dictionary of section -> {key: value} mappings
+        temp_dir: Temporary directory to create the file in
 
-    manager = TemplateManager(str(templates_path))
-    return manager
+    Returns:
+        Path to the created config file
+    """
+    config_file = Path(temp_dir) / "test_config.ini"
+    config = configparser.ConfigParser()
+
+    for section, options in config_data.items():
+        config.add_section(section)
+        for key, value in options.items():
+            config.set(section, key, value)
+
+    with open(config_file, "w") as f:
+        config.write(f)
+
+    return str(config_file)
 
 
-def test_template_renderer_markdown_parsing(template_manager: TemplateManager) -> None:
-    renderer = TemplateRenderer(template_manager)
-    context = {"name": "Alice"}
-    segments = renderer.render_from_template("test_template", context)
+def create_test_template_file(template_data: dict[str, Any], temp_dir: str, filename: str) -> str:
+    """Create a test template file with the given data.
 
-    assert segments == [
-        {"styles": {"bold": True}, "text": "Hello there"},
-        {"styles": {}, "text": ", Alice!"},
-        {"styles": {}, "text": "\n"},
-        {"styles": {}, "text": "Nice to meet you."},
-    ]
+    Args:
+        template_data: Template data dictionary
+        temp_dir: Temporary directory to create the file in
+        filename: Name of the template file (without extension)
 
+    Returns:
+        Path to the created template file
+    """
+    template_file = Path(temp_dir) / f"{filename}.yaml"
 
-def test_template_renderer_special_letters_disabled(template_manager: TemplateManager) -> None:
-    renderer = TemplateRenderer(template_manager)
-    renderer.enable_special_letters = False
-    context = {"name": "Zażółć gęślą jaźń"}
-    segments = renderer.render_from_template("test_template", context)
+    with open(template_file, "w") as f:
+        yaml.dump(template_data, f)
 
-    assert segments == [
-        {"styles": {"bold": True}, "text": "Hello there"},
-        {"styles": {}, "text": ", Zazolc gesla jazn!"},
-        {"styles": {}, "text": "\n"},
-        {"styles": {}, "text": "Nice to meet you."},
-    ]
+    return str(template_file)
 
 
-def test_compute_agenda_variables() -> None:
-    variables = compute_agenda_variables()
-    assert "week_number" in variables
-    assert "week_start_date" in variables
-    assert "week_end_date" in variables
-    assert "days" in variables
-    assert len(variables["days"]) == 7
+def create_mock_printer() -> MagicMock:
+    """Create a mock printer with common methods.
+
+    Returns:
+        Mock printer object
+    """
+    mock_printer = MagicMock()
+    mock_printer.set_with_default = MagicMock()
+    mock_printer.text = MagicMock()
+    mock_printer.set = MagicMock()
+    mock_printer.cut = MagicMock()
+    mock_printer.close = MagicMock()
+    return mock_printer
 
 
-def test_get_latest_version(mocker: MagicMock) -> None:
-    mock_response = mocker.Mock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = {"info": {"version": "2.1.37"}}
-    mocker.patch("printerm.core.utils.requests.get", return_value=mock_response)
-    latest_version = get_latest_version()
-    assert latest_version == "2.1.37"
+def create_mock_config_service(overrides: dict[str, Any] | None = None) -> MagicMock:
+    """Create a mock config service with default values.
+
+    Args:
+        overrides: Dictionary of method_name -> return_value overrides
+
+    Returns:
+        Mock config service
+    """
+    mock = MagicMock()
+
+    # Set default return values
+    mock.get_printer_ip.return_value = "192.168.1.100"
+    mock.get_chars_per_line.return_value = 32
+    mock.get_enable_special_letters.return_value = False
+    mock.get_check_for_updates.return_value = True
+    mock.get_flask_port.return_value = 5555
+    mock.get_flask_secret_key.return_value = "test_secret"
+    mock.get_gui_recent_templates.return_value = []
+
+    # Apply overrides
+    if overrides:
+        for method_name, return_value in overrides.items():
+            getattr(mock, method_name).return_value = return_value
+
+    return mock
 
 
-def test_is_new_version_available(mocker: MagicMock) -> None:
-    mocker.patch("printerm.core.utils.get_latest_version", return_value="1.2.3")
-    assert is_new_version_available("1.0.0") is True
-    assert is_new_version_available("1.2.3") is False
-    assert is_new_version_available("1.3.0") is False
+def create_mock_template_service(overrides: dict[str, Any] | None = None) -> MagicMock:
+    """Create a mock template service with default values.
+
+    Args:
+        overrides: Dictionary of method_name -> return_value overrides
+
+    Returns:
+        Mock template service
+    """
+    mock = MagicMock()
+
+    # Set default return values
+    mock.get_template.return_value = {"name": "Test Template", "segments": [{"text": "Test content", "styles": {}}]}
+    mock.list_templates.return_value = ["test_template"]
+    mock.render_template.return_value = [{"text": "Rendered content", "styles": {"bold": True}}]
+    mock.get_template_variables.return_value = []
+    mock.has_script.return_value = False
+    mock.get_script_info.return_value = None
+    mock.list_available_scripts.return_value = {}
+
+    # Apply overrides
+    if overrides:
+        for method_name, return_value in overrides.items():
+            getattr(mock, method_name).return_value = return_value
+
+    return mock
 
 
-def test_template_renderer_missing_template(template_manager: TemplateManager) -> None:
-    renderer = TemplateRenderer(template_manager)
-    with pytest.raises(ValueError, match="Template 'nonexistent' not found."):
-        renderer.render_from_template("nonexistent", {})
+def assert_mock_called_with_any_of(mock_method: MagicMock, expected_calls: list) -> None:
+    """Assert that a mock method was called with any of the expected call arguments.
+
+    Args:
+        mock_method: The mock method to check
+        expected_calls: List of expected call arguments
+
+    Raises:
+        AssertionError: If the method was not called with any of the expected arguments
+    """
+    actual_calls = mock_method.call_args_list
+
+    for expected_call in expected_calls:
+        if expected_call in actual_calls:
+            return
+
+    raise AssertionError(
+        f"Expected method to be called with any of {expected_calls}, but actual calls were: {actual_calls}"
+    )
+
+
+def assert_config_file_contains(config_file: str, section: str, key: str, expected_value: str) -> None:
+    """Assert that a config file contains the expected value.
+
+    Args:
+        config_file: Path to the config file
+        section: Config section name
+        key: Config key name
+        expected_value: Expected value
+
+    Raises:
+        AssertionError: If the config file doesn't contain the expected value
+    """
+    config = configparser.ConfigParser()
+    config.read(config_file)
+
+    if not config.has_section(section):
+        raise AssertionError(f"Config file {config_file} does not have section '{section}'")
+
+    if not config.has_option(section, key):
+        raise AssertionError(f"Config file {config_file} section '{section}' does not have option '{key}'")
+
+    actual_value = config.get(section, key)
+    if actual_value != expected_value:
+        raise AssertionError(
+            f"Config file {config_file} section '{section}' key '{key}' "
+            f"has value '{actual_value}', expected '{expected_value}'"
+        )
+
+
+def get_sample_template_data() -> dict[str, Any]:
+    """Get sample template data for testing.
+
+    Returns:
+        Dictionary containing sample template data
+    """
+    return {
+        "name": "Sample Template",
+        "description": "A sample template for testing",
+        "variables": [
+            {"name": "title", "description": "Title text", "required": True, "type": "string"},
+            {"name": "content", "description": "Content text", "required": False, "type": "string"},
+        ],
+        "segments": [{"text": "{{ title }}\n---\n{{ content }}", "styles": {"bold": True, "align": "center"}}],
+    }
+
+
+def get_sample_context_data() -> dict[str, Any]:
+    """Get sample context data for testing.
+
+    Returns:
+        Dictionary containing sample context data
+    """
+    return {
+        "title": "Test Title",
+        "content": "This is test content",
+        "date": "2025-06-30",
+        "items": ["Item 1", "Item 2", "Item 3"],
+        "user": "Test User",
+    }

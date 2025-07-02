@@ -94,9 +94,23 @@ line-ending = "auto"
 skip-magic-trailing-comma = false
 
 
-[tool.pytest]
-python_files = "tests.py test_*.py *_tests.py"
-norecursedirs = ".git .env venv"
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = [
+    "-ra",
+    "--cov=printerm",
+    "--cov-report=term-missing",
+    "--cov-fail-under=50"
+]
+testpaths = ["test"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning"
+]
 
 
 [tool.mypy]
@@ -115,18 +129,32 @@ disable_error_code = "abstract"
 exclude_dirs = ['test/*']
 
 
-[tool.coverage.paths]
-source = ["src/"]
-
 [tool.coverage.run]
-source = ["src/"]
+source = ["printerm"]
 omit = [
     "**/__init__.py",
+    "**/test_*",
+    "test/**",
 ]
 relative_files = true
 
 [tool.coverage.report]
 show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+
+[tool.coverage.paths]
+source = ["printerm/", ".tox/*/lib/python*/site-packages/printerm/"]
 
 [project.scripts]
 printerm = "printerm.interfaces.cli:app"
