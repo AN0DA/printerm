@@ -1,33 +1,286 @@
-<!-- templates/settings.html -->
 {% extends "base.html" %}
 
+{% block title %}Settings - Thermal Printer App{% endblock %}
+
 {% block content %}
-<div class="card">
-    <div class="card-header">
-        <h2>Settings</h2>
-    </div>
-    <div class="card-body">
-        <form method="post">
-            <div class="mb-3">
-                <label for="ip_address" class="form-label">Printer IP Address:</label>
-                <input type="text" name="ip_address" id="ip_address" class="form-control" value="{{ ip_address }}" required>
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title mb-0">
+                    <i class="bi bi-gear text-primary"></i> Configuration Settings
+                </h2>
+                <p class="text-secondary mb-0 mt-1">Configure your thermal printer and application preferences</p>
             </div>
-            <div class="mb-3">
-                <label for="chars_per_line" class="form-label">Characters Per Line:</label>
-                <input type="number" name="chars_per_line" id="chars_per_line" class="form-control" value="{{ chars_per_line }}" required>
+            
+            <div class="card-body">
+                <form method="post" id="settingsForm">
+                    <!-- Printer Configuration -->
+                    <div class="mb-4">
+                        <h5 class="mb-3">
+                            <i class="bi bi-printer text-primary"></i> Printer Configuration
+                        </h5>
+                        
+                        <div class="mb-3">
+                            <label for="ip_address" class="form-label">
+                                Printer IP Address <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-router"></i>
+                                </span>
+                                <input type="text" 
+                                       name="ip_address" 
+                                       id="ip_address" 
+                                       class="form-control" 
+                                       value="{{ ip_address }}"
+                                       placeholder="192.168.1.100"
+                                       pattern="^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
+                                       required>
+                            </div>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle"></i> Enter the IP address of your thermal printer on the network
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="chars_per_line" class="form-label">
+                                Characters Per Line <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-type"></i>
+                                </span>
+                                <input type="number" 
+                                       name="chars_per_line" 
+                                       id="chars_per_line" 
+                                       class="form-control" 
+                                       value="{{ chars_per_line }}"
+                                       min="20"
+                                       max="80"
+                                       required>
+                            </div>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle"></i> Typically 32-48 characters for thermal printers
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Text Processing -->
+                    <div class="mb-4">
+                        <h5 class="mb-3">
+                            <i class="bi bi-fonts text-primary"></i> Text Processing
+                        </h5>
+                        
+                        <div class="mb-3">
+                            <label for="enable_special_letters" class="form-label">
+                                Special Characters Support
+                            </label>
+                            <select name="enable_special_letters" id="enable_special_letters" class="form-select">
+                                <option value="True" {% if enable_special_letters %}selected{% endif %}>
+                                    <i class="bi bi-check"></i> Enabled - Support accented and special characters
+                                </option>
+                                <option value="False" {% if not enable_special_letters %}selected{% endif %}>
+                                    <i class="bi bi-x"></i> Disabled - ASCII characters only
+                                </option>
+                            </select>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle"></i> Enable if your printer supports Unicode characters (ą, ć, ę, etc.)
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Application Settings -->
+                    <div class="mb-4">
+                        <h5 class="mb-3">
+                            <i class="bi bi-app-indicator text-primary"></i> Application Settings
+                        </h5>
+                        
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" 
+                                   type="checkbox" 
+                                   name="check_for_updates" 
+                                   id="check_for_updates"
+                                   value="True"
+                                   {% if check_for_updates %}checked{% endif %}>
+                            <label class="form-check-label" for="check_for_updates">
+                                <i class="bi bi-cloud-download"></i> Check for Updates Automatically
+                            </label>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle"></i> Automatically check for application updates on startup
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Theme Settings -->
+                    <div class="mb-4">
+                        <h5 class="mb-3">
+                            <i class="bi bi-palette text-primary"></i> Appearance
+                        </h5>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Current Theme</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="theme" id="theme-light" value="light" {% if theme == 'light' %}checked{% endif %}>
+                                <label class="btn btn-outline-primary" for="theme-light">
+                                    <i class="bi bi-sun"></i> Light Theme
+                                </label>
+                                
+                                <input type="radio" class="btn-check" name="theme" id="theme-dark" value="dark" {% if theme == 'dark' %}checked{% endif %}>
+                                <label class="btn btn-outline-primary" for="theme-dark">
+                                    <i class="bi bi-moon"></i> Dark Theme
+                                </label>
+                            </div>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle"></i> Choose your preferred interface theme
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to Home
+                        </a>
+                        
+                        <div class="d-grid gap-2 d-md-flex">
+                            <button type="button" class="btn btn-outline-primary" id="testConnectionBtn">
+                                <i class="bi bi-wifi"></i>
+                                <span class="btn-text">Test Connection</span>
+                                <div class="spinner-border spinner-border-sm loading-spinner ms-2" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </button>
+                            
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle"></i>
+                                <span class="btn-text">Save Settings</span>
+                                <div class="spinner-border spinner-border-sm loading-spinner ms-2" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </form>
             </div>
-            <div class="mb-3">
-                <label for="enable_special_letters" class="form-label">Enable Special Letters:</label>
-                <select name="enable_special_letters" id="enable_special_letters" class="form-select" required>
-                    <option value="True" {% if enable_special_letters %}selected{% endif %}>True</option>
-                    <option value="False" {% if not enable_special_letters %}selected{% endif %}>False</option>
-                </select>
+        </div>
+        
+        <!-- Help Section -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-question-circle text-info"></i> Help & Tips
+                </h5>
             </div>
-            <div class="d-flex justify-content-between">
-                <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancel</a>
-                <button type="submit" class="btn btn-primary">Save</button>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="d-flex">
+                            <i class="bi bi-lightbulb text-warning me-2 mt-1"></i>
+                            <div>
+                                <strong>Finding Printer IP:</strong>
+                                <p class="small text-secondary mb-0">Check your router's admin panel or use network scanning tools to find your printer's IP address.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex">
+                            <i class="bi bi-gear text-primary me-2 mt-1"></i>
+                            <div>
+                                <strong>Character Width:</strong>
+                                <p class="small text-secondary mb-0">Most 58mm thermal printers use 32 characters per line, while 80mm printers use 48.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </form>
+        </div>
     </div>
 </div>
+
+<!-- Test Connection Modal -->
+<div class="modal fade" id="connectionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-wifi"></i> Connection Test
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="connectionResults">
+                <!-- Connection test results will be populated here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Theme change handling
+        document.querySelectorAll('input[name="theme"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.checked) {
+                    makeApiCall('/api/theme', { theme: this.value })
+                        .then(data => {
+                            if (data.success) {
+                                // Theme will be applied on next page load
+                                console.log('Theme preference saved');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error saving theme:', error);
+                        });
+                }
+            });
+        });
+        
+        // Form submission
+        const form = document.getElementById('settingsForm');
+        form.addEventListener('submit', function(e) {
+            const submitBtn = form.querySelector('button[type="submit"]');
+            showLoading(submitBtn);
+        });
+        
+        // Test connection functionality (placeholder)
+        const testBtn = document.getElementById('testConnectionBtn');
+        testBtn.addEventListener('click', function() {
+            showLoading(testBtn);
+            
+            // Simulate connection test
+            setTimeout(() => {
+                hideLoading(testBtn);
+                
+                const modalBody = document.getElementById('connectionResults');
+                modalBody.innerHTML = `
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> 
+                        Connection testing feature is coming soon. For now, ensure your printer IP is correct and the printer is powered on.
+                    </div>
+                `;
+                
+                const modal = new bootstrap.Modal(document.getElementById('connectionModal'));
+                modal.show();
+            }, 1000);
+        });
+        
+        // IP address validation
+        const ipInput = document.getElementById('ip_address');
+        ipInput.addEventListener('input', function() {
+            const value = this.value;
+            const ipPattern = /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+            
+            if (value && !ipPattern.test(value)) {
+                this.setCustomValidity('Please enter a valid IP address (e.g., 192.168.1.100)');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    });
+</script>
 {% endblock %}
