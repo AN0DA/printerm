@@ -166,7 +166,9 @@ class TestCLI:
 
     @patch("printerm.interfaces.cli.template_service")
     @patch("printerm.interfaces.cli.service_container")
-    def test_print_template_command_printer_error(self, mock_container: MagicMock, mock_template_service: MagicMock) -> None:
+    def test_print_template_command_printer_error(
+        self, mock_container: MagicMock, mock_template_service: MagicMock
+    ) -> None:
         """Test print template command with printer error."""
         mock_template_service.list_templates.return_value = ["test_template"]
         mock_template_service.get_template.return_value = {"variables": []}
@@ -204,7 +206,9 @@ class TestCLI:
     @patch("printerm.interfaces.cli.template_service")
     @patch("printerm.interfaces.cli.config_service")
     @patch("printerm.interfaces.cli.service_container")
-    def test_status_command_success(self, mock_container: MagicMock, mock_config: MagicMock, mock_template_service: MagicMock) -> None:
+    def test_status_command_success(
+        self, mock_container: MagicMock, mock_config: MagicMock, mock_template_service: MagicMock
+    ) -> None:
         """Test status command with configured printer."""
         mock_config.get_printer_ip.return_value = "192.168.1.100"
         mock_config.get_chars_per_line.return_value = 48
