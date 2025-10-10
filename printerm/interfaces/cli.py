@@ -144,11 +144,10 @@ def print_template(
         if template_service.has_script(template_name):
             # Use script to generate context
             context = template_service.generate_template_context(template_name)
-        else:
             # Manual input for variables
             for var in template.get("variables", []):
                 if var.get("markdown", False):
-                    value = click.edit(var["description"], require_save=True)
+                    value = click.edit("", require_save=True)
                 else:
                     value = typer.prompt(var["description"])
                 context[var["name"]] = value
