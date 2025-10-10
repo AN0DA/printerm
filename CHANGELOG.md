@@ -1,3 +1,25 @@
+# [1.3.0](https://github.com/AN0DA/printerm/compare/v1.2.0...v1.3.0) (2025-10-10)
+
+
+### Bug Fixes
+
+* **cli:** correct template context generation logic in print command ([d4107dc](https://github.com/AN0DA/printerm/commit/d4107dc68fa093f7a05afaa1ec9a5bf38fc3dfe5))
+* **cli:** correct variable input handling in print_template function ([6f728f5](https://github.com/AN0DA/printerm/commit/6f728f5f2b92211151b5c373a88f784f6b6dadc0))
+* **cli:** refactor update handling and improve type hints ([e867eaf](https://github.com/AN0DA/printerm/commit/e867eaf397aa92475d49abc9227c715959f18955))
+* **gui:** improve keyboard shortcut handling in template dialog ([f96f0df](https://github.com/AN0DA/printerm/commit/f96f0dfc67740a70df608685163137a5f309c3d2))
+* **update:** improve retry logic and error handling in update checks ([8dfd0d1](https://github.com/AN0DA/printerm/commit/8dfd0d177f0e9f2f9d71cc0c98230d79a329a18d))
+
+
+### Features
+
+* **gui:** add application icons and update HTML template for favicon ([8b012d6](https://github.com/AN0DA/printerm/commit/8b012d63cc9bcb02b4c53f61255b77da016ffa7c))
+* **gui:** add direct printing functionality for templates ([85ddcdd](https://github.com/AN0DA/printerm/commit/85ddcdd663659576b9b7c2c25e274ad1d496eff3))
+* **gui:** enhance print template layout and validation feedback ([59512bf](https://github.com/AN0DA/printerm/commit/59512bf19035d51fdbde168fbffcf6c864e73475))
+* **gui:** enhance template dialog with print confirmation and reopen option ([7a35964](https://github.com/AN0DA/printerm/commit/7a359649a34ef519b3550d2dfae39d90e0841d86))
+* **gui:** enhance template dialog with status feedback and button management ([d7835a2](https://github.com/AN0DA/printerm/commit/d7835a2a4ffa87dcbbae77f5bf2bc8b150a3142d))
+* **update:** implement update checking and notification system ([948d89d](https://github.com/AN0DA/printerm/commit/948d89d7a6ce0147105cc561b252dda95980a917))
+* **web:** remove preview functionality and use template display name ([0c19566](https://github.com/AN0DA/printerm/commit/0c1956629d39e8e23e8defd166e3aa9246d9dea8))
+
 # [1.2.0](https://github.com/AN0DA/printerm/compare/v1.1.1...v1.2.0) (2025-07-02)
 
 
