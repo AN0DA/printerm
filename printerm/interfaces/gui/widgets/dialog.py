@@ -425,9 +425,11 @@ if PYQT_AVAILABLE:
 
     def keyPressEvent(self, event: QKeyEvent) -> None:  # type: ignore[no-untyped-def]
         """Handle keyboard shortcuts."""
-        if event.key() == 16777220:  # Enter key
+        from PyQt6.QtCore import Qt
+
+        if event.key() == Qt.Key.Key_Return:
             self.print_template()
-        elif event.key() == 16777216:  # Escape key
+        elif event.key() == Qt.Key.Key_Escape:
             self.reject()
         else:
             super().keyPressEvent(event)  # type: ignore[misc]
