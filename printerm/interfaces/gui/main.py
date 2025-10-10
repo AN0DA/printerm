@@ -1,6 +1,7 @@
 """GUI interface for the printerm application with enhanced UX."""
 
 import logging
+import os
 import sys
 
 from printerm.error_handling import ErrorHandler
@@ -36,10 +37,22 @@ def main() -> None:
         sys.exit(1)
 
     try:
+        from PyQt6.QtGui import QIcon
         from PyQt6.QtWidgets import QApplication
 
         logger.info("Launching GUI application")
         app = QApplication(sys.argv)
+        app.setApplicationName("printerm")
+        app.setApplicationDisplayName("printerm")
+        
+        # Set application icon
+        icon_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), "assets", "icons", "printer_icon_32.png")
+        if os.path.exists(icon_path):
+            app.setWindowIcon(QIcon(icon_path))
+            logger.info(f"Set application icon: {icon_path}")
+        else:
+            logger.warning(f"Icon not found: {icon_path}")
+        
         theme = ThemeManager.get_current_theme()
         ThemeManager.apply_theme_to_app(app, theme)
         window = MainWindow()
