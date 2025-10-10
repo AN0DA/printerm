@@ -6,7 +6,7 @@ import logging
 from printerm.error_handling import ErrorHandler
 from printerm.exceptions import ConfigurationError
 from printerm.interfaces.gui.theme import ThemeManager
-from printerm.interfaces.gui.widgets.base import PYQT_AVAILABLE, config_service, gui_settings, template_service
+from printerm.interfaces.gui.widgets.base import PYQT_AVAILABLE, config_service, gui_settings, printer_service, template_service
 
 logger = logging.getLogger(__name__)
 
@@ -111,16 +111,22 @@ if PYQT_AVAILABLE:
                 recent_layout.setSpacing(6)
 
                 for template_name in recent_templates[:4]:  # Show max 4 recent
-                    # Get template display name
+                    # Get template display name and variables
                     try:
                         template = self.template_service.get_template(template_name)
                         display_name = template.get("name", template_name.title())
+                        variables = template.get("variables", [])
                     except Exception:
                         display_name = template_name.title()
+                        variables = ["dummy"]  # Assume has variables if can't load
+                    button_text = "Open" if variables else "Print"
                     recent_btn = QPushButton(f"📄 {display_name}")
                     recent_btn.setMaximumWidth(150)
                     recent_btn.setMinimumHeight(35)
-                    recent_btn.clicked.connect(lambda checked, name=template_name: self.open_template_dialog(name))
+                    if variables:
+                        recent_btn.clicked.connect(lambda checked, name=template_name: self.open_template_dialog(name))
+                    else:
+                        recent_btn.clicked.connect(lambda checked, name=template_name: self.print_template_directly(name))
                     recent_layout.addWidget(recent_btn)
 
                 recent_layout.addStretch()
@@ -150,8 +156,10 @@ if PYQT_AVAILABLE:
                     try:
                         template = self.template_service.get_template(template_name)
                         description = template.get("description", "No description")
+                        variables = template.get("variables", [])
                     except Exception:
                         description = "Template information unavailable"
+                        variables = ["dummy"]  # Assume has variables if can't load
 
                     # Create compact template row
                     template_row = QWidget()
@@ -164,7 +172,7 @@ if PYQT_AVAILABLE:
                     info_layout = QVBoxLayout()
                     info_layout.setSpacing(2)
 
-                    name_label = QLabel(f"📄 {template.get('name', template_name.title())}")
+                    name_label = QLabel(f"📄 {template.get('name', template_name.title()) if 'template' in locals() else template_name.title()}")
                     name_label.setFont(QFont("Arial", 12, QFont.Weight.Bold))  # Increased from 11
                     info_layout.addWidget(name_label)
 
@@ -176,7 +184,8 @@ if PYQT_AVAILABLE:
                     row_layout.addLayout(info_layout, 1)  # Take most space
 
                     # Action button with border
-                    action_button = QPushButton("Open")
+                    button_text = "Open" if variables else "Print"
+                    action_button = QPushButton(button_text)
                     action_button.setMaximumWidth(80)
                     action_button.setMinimumHeight(35)
                     action_button.setStyleSheet("""
@@ -191,7 +200,10 @@ if PYQT_AVAILABLE:
                             border-color: #999;
                         }
                     """)
-                    action_button.clicked.connect(lambda checked, name=template_name: self.open_template_dialog(name))
+                    if variables:
+                        action_button.clicked.connect(lambda checked, name=template_name: self.open_template_dialog(name))
+                    else:
+                        action_button.clicked.connect(lambda checked, name=template_name: self.print_template_directly(name))
                     row_layout.addWidget(action_button)
 
                     template_row.setLayout(row_layout)
@@ -381,6 +393,43 @@ if PYQT_AVAILABLE:
             except Exception as e:
                 ErrorHandler.handle_error(e, f"Error opening template dialog for '{template_name}'")
                 QMessageBox.critical(self, "❌ Error", f"Failed to open template dialog: {e}")
+
+        def print_template_directly(self, template_name: str) -> None:
+            """Print template directly with confirmation popup."""
+            try:
+                logger.info(f"Direct printing template: {template_name}")
+
+                # Get display name
+                template = self.template_service.get_template(template_name)
+                display_name = template.get("name", template_name)
+
+                # Confirmation popup
+                reply = QMessageBox.question(
+                    self,
+                    "Confirmation",
+                    f"Do you want to print '{display_name}'?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+                )
+                if reply != QMessageBox.StandardButton.Yes:
+                    return
+
+                # Print template
+                context = {}  # No variables needed
+                with printer_service as printer:
+                    printer.print_template(template_name, context)
+
+                # Add to recent templates
+                gui_settings.add_recent_template(template_name)
+
+                logger.info(f"Successfully printed template: {template_name}")
+                QMessageBox.information(self, "✓ Success", f"Successfully printed '{display_name}' template!")
+
+                # Refresh recent templates
+                self.refresh_templates_tab()
+
+            except Exception as e:
+                ErrorHandler.handle_error(e, f"Error printing template '{template_name}'")
+                QMessageBox.critical(self, "❌ Error", f"Failed to print: {e}")
 
         def refresh_templates_tab(self) -> None:
             """Refresh the templates tab to show updated recent templates."""

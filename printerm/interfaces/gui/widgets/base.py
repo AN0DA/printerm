@@ -5,13 +5,14 @@ from typing import Any
 
 from printerm.interfaces.gui.settings import GuiSettings
 from printerm.services import service_container
-from printerm.services.interfaces import ConfigService, TemplateService
+from printerm.services.interfaces import ConfigService, PrinterService, TemplateService
 
 logger = logging.getLogger(__name__)
 
 # Get services from container (like other interfaces)
 config_service = service_container.get(ConfigService)
 template_service = service_container.get(TemplateService)
+printer_service = service_container.get(PrinterService)
 gui_settings = GuiSettings(config_service)
 
 try:
