@@ -1,0 +1,57 @@
+"""GUI interface for the printerm application with enhanced UX."""
+
+import logging
+import sys
+
+from printerm.error_handling import ErrorHandler
+from printerm.interfaces import gui as gui_module
+from printerm.services import service_container
+from printerm.services.interfaces import ConfigService, TemplateService
+
+from .theme import ThemeManager
+from .widgets import MainWindow
+
+# Configure logging for GUI interface
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler("app.log", encoding="utf-8"),
+    ],
+)
+
+logger = logging.getLogger("printerm.interfaces.gui")
+
+# Get services from container (like other interfaces)
+config_service = service_container.get(ConfigService)
+template_service = service_container.get(TemplateService)
+
+
+def main() -> None:
+    """Launch the GUI application."""
+    if not gui_module.PYQT_AVAILABLE:
+        logger.error("PyQt6 is not available")
+        print("PyQt6 is not available. Please install it with: pip install PyQt6")  # noqa: T201
+        sys.exit(1)
+
+    try:
+        from PyQt6.QtWidgets import QApplication
+
+        logger.info("Launching GUI application")
+        app = QApplication(sys.argv)
+        theme = ThemeManager.get_current_theme()
+        ThemeManager.apply_theme_to_app(app, theme)
+        window = MainWindow()
+        window.show()
+        logger.info("GUI application started successfully")
+        sys.exit(app.exec())
+    except Exception as e:
+        ErrorHandler.handle_error(e, "Error launching GUI")
+        logger.error(f"Failed to launch GUI: {e}")
+        print(f"Failed to launch GUI: {e}")  # noqa: T201
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
