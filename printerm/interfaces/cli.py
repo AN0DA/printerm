@@ -454,11 +454,11 @@ def check_for_updates_on_startup() -> None:
 
 def perform_update() -> None:
     """Update the application to the latest version from PyPI."""
-    try:
-        import os
-        import subprocess
-        import sys
+    import os
+    import subprocess  # nosec
+    import sys
 
+    try:
         typer.echo("⬆️  Updating the application...")
 
         # Check if we're in a virtual environment
@@ -482,7 +482,7 @@ def perform_update() -> None:
         typer.echo(f"Running: {' '.join(cmd)}")
 
         # Run with timeout and capture output
-        result = subprocess.run(
+        result = subprocess.run(  # nosec
             cmd,
             capture_output=True,
             text=True,

@@ -2,6 +2,7 @@
 
 import contextlib
 import logging
+from typing import Any
 
 from printerm import __version__
 from printerm.error_handling import ErrorHandler
@@ -437,7 +438,7 @@ if PYQT_AVAILABLE:
                     return
 
                 # Print template
-                context = {}  # No variables needed
+                context: dict[str, Any] = {}  # No variables needed
                 with printer_service as printer:
                     printer.print_template(template_name, context)
 
@@ -510,10 +511,10 @@ if PYQT_AVAILABLE:
 
         def perform_update(self) -> None:
             """Perform the update by running the update command."""
-            try:
-                import subprocess
-                import sys
+            import subprocess  # nosec
+            import sys
 
+            try:
                 # Show progress message
                 QMessageBox.information(
                     self, "Updating", "Updating Printerm to the latest version...\n\nThis may take a few moments."
@@ -528,7 +529,7 @@ if PYQT_AVAILABLE:
                     cmd.insert(3, "--user")
 
                 # Run with timeout
-                result = subprocess.run(
+                result = subprocess.run(  # nosec
                     cmd,
                     capture_output=True,
                     text=True,

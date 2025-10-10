@@ -13,7 +13,7 @@ from printerm.services.interfaces import PrinterService, TemplateService
 logger = logging.getLogger(__name__)
 
 if PYQT_AVAILABLE:
-    from PyQt6.QtGui import QFont
+    from PyQt6.QtGui import QFont, QKeyEvent
     from PyQt6.QtWidgets import (
         QDialog,
         QFormLayout,
@@ -61,9 +61,9 @@ if PYQT_AVAILABLE:
             self.status_label.hide()  # Hidden by default
 
             # Button references for state management
-            self.validate_button = None
-            self.cancel_button = None
-            self.print_button = None
+            self.validate_button: QPushButton | None = None
+            self.cancel_button: QPushButton | None = None
+            self.print_button: QPushButton | None = None
 
             self.init_ui()
 
@@ -423,11 +423,11 @@ if PYQT_AVAILABLE:
 
                     QTimer.singleShot(3000, self.status_label.hide)
 
-    def keyPressEvent(self, event) -> None:
+    def keyPressEvent(self, event: QKeyEvent) -> None:  # type: ignore[no-untyped-def]
         """Handle keyboard shortcuts."""
         if event.key() == 16777220:  # Enter key
             self.print_template()
         elif event.key() == 16777216:  # Escape key
             self.reject()
         else:
-            super().keyPressEvent(event)
+            super().keyPressEvent(event)  # type: ignore[misc]

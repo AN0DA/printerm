@@ -118,7 +118,7 @@ class TemplateServiceImpl:
     def _custom_wrap(self, parts: list[dict[str, Any]], chars_per_line: int) -> list[list[dict[str, Any]]]:
         """Custom wrap a logical line with multiple styled parts, accounting for effective widths."""
         physical_lines = []
-        current_line = []
+        current_line: list[dict[str, Any]] = []
         current_pos = 0
         for part in parts:
             multiplier = 2 if part["styles"].get("double_width", False) else 1
