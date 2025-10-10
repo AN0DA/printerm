@@ -5,7 +5,7 @@ from typing import Any
 
 from printerm.interfaces.gui.settings import GuiSettings
 from printerm.services import service_container
-from printerm.services.interfaces import ConfigService, PrinterService, TemplateService
+from printerm.services.interfaces import ConfigService, PrinterService, TemplateService, UpdateService
 
 logger = logging.getLogger(__name__)
 
@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 config_service = service_container.get(ConfigService)
 template_service = service_container.get(TemplateService)
 printer_service = service_container.get(PrinterService)
+update_service = service_container.get(UpdateService)
 gui_settings = GuiSettings(config_service)
 
 try:

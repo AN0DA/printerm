@@ -191,6 +191,13 @@
                             <i class="bi bi-sun-fill" id="theme-icon"></i>
                         </span>
                     </li>
+                    {% if update_available %}
+                    <li class="nav-item">
+                        <span class="nav-link text-warning" onclick="showUpdateDialog()">
+                            <i class="bi bi-exclamation-triangle-fill"></i> Update Available
+                        </span>
+                    </li>
+                    {% endif %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('settings') }}">
                             <i class="bi bi-gear"></i> Settings
@@ -296,6 +303,26 @@
         function hideLoading(element) {
             element.classList.remove('loading');
             element.disabled = false;
+        }
+        
+        function showUpdateDialog() {
+            if (confirm('A new version of Printerm is available! Would you like to update now?')) {
+                // Show loading
+                const updateLink = document.querySelector('.nav-link.text-warning');
+                if (updateLink) {
+                    updateLink.innerHTML = '<i class="bi bi-arrow-repeat"></i> Updating...';
+                    updateLink.style.pointerEvents = 'none';
+                }
+                
+                // Perform update via command line (since web interface can't run pip directly)
+                alert('Please run "printerm update" in your terminal to update the application.');
+                
+                // Reset the link
+                if (updateLink) {
+                    updateLink.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> Update Available';
+                    updateLink.style.pointerEvents = 'auto';
+                }
+            }
         }
     </script>
     

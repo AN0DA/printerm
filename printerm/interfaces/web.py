@@ -5,10 +5,11 @@ from flask import Flask, flash, jsonify, redirect, render_template, request, url
 from waitress import serve
 from werkzeug.wrappers import Response
 
+from printerm import __version__
 from printerm.error_handling import ErrorHandler
 from printerm.exceptions import ConfigurationError, PrintermError
 from printerm.services import service_container
-from printerm.services.interfaces import ConfigService, PrinterService, TemplateService
+from printerm.services.interfaces import ConfigService, PrinterService, TemplateService, UpdateService
 
 logger = logging.getLogger(__name__)
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -16,6 +17,7 @@ template_dir = os.path.join(dir_path, "web_templates")
 # Get services from container
 config_service = service_container.get(ConfigService)
 template_service = service_container.get(TemplateService)
+update_service = service_container.get(UpdateService)
 app = Flask(__name__, template_folder=template_dir)
 app.secret_key = config_service.get_flask_secret_key()
 
@@ -108,8 +110,22 @@ def index() -> str:
     recent_templates = web_settings.get_recent_templates()
     theme = WebThemeManager.get_theme_from_request()
     theme_styles = WebThemeManager.get_theme_styles(theme)
+
+    # Check for updates
+    update_available = False
+    if config_service.get_check_for_updates():
+        try:
+            update_available = update_service.check_for_updates_with_retry(__version__)
+        except Exception as e:
+            logger.warning(f"Failed to check for updates: {e}")
+
     return render_template(
-        "index.html", templates=templates, recent_templates=recent_templates, theme=theme, theme_styles=theme_styles
+        "index.html",
+        templates=templates,
+        recent_templates=recent_templates,
+        theme=theme,
+        theme_styles=theme_styles,
+        update_available=update_available,
     )
 
 
@@ -267,6 +283,40 @@ def set_theme() -> Response:
     except Exception as e:
         response = jsonify({"success": False, "error": str(e)})
         response.status_code = 400
+        return response
+
+
+@app.route("/api/updates/check", methods=["GET"])
+def check_updates() -> Response:
+    """Check for available updates."""
+    try:
+        update_available = False
+        latest_version = None
+        current_version = __version__
+
+        if config_service.get_check_for_updates():
+            update_available = update_service.is_new_version_available(current_version)
+            if update_available:
+                latest_version = update_service.get_latest_version()
+
+        return jsonify(
+            {
+                "update_available": update_available,
+                "current_version": current_version,
+                "latest_version": latest_version,
+                "check_enabled": config_service.get_check_for_updates(),
+            }
+        )
+    except Exception as e:
+        logger.error(f"Error checking for updates: {e}")
+        response = jsonify(
+            {
+                "update_available": False,
+                "error": "Failed to check for updates",
+                "check_enabled": config_service.get_check_for_updates(),
+            }
+        )
+        response.status_code = 500
         return response
 
 

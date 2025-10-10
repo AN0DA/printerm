@@ -3,6 +3,7 @@
 import contextlib
 import logging
 
+from printerm import __version__
 from printerm.error_handling import ErrorHandler
 from printerm.exceptions import ConfigurationError
 from printerm.interfaces.gui.theme import ThemeManager
@@ -12,6 +13,7 @@ from printerm.interfaces.gui.widgets.base import (
     gui_settings,
     printer_service,
     template_service,
+    update_service,
 )
 
 logger = logging.getLogger(__name__)
@@ -54,6 +56,8 @@ if PYQT_AVAILABLE:
 
             logger.info("Starting enhanced GUI application")
             self.init_ui()
+            # Check for updates after UI is initialized
+            self.check_for_updates()
             # Theme is automatically applied in the main() function
 
         def init_ui(self) -> None:
@@ -479,3 +483,72 @@ if PYQT_AVAILABLE:
                 self.last_recent_templates = gui_settings.get_recent_templates()
             except Exception as e:
                 logger.warning(f"Failed to refresh templates tab: {e}")
+
+        def check_for_updates(self) -> None:
+            """Check for updates and show notification if available."""
+            try:
+                if self.config_service.get_check_for_updates() and update_service.check_for_updates_with_retry(
+                    __version__
+                ):
+                    self.show_update_dialog()
+            except Exception as e:
+                logger.error(f"Error checking for updates: {e}")
+
+        def show_update_dialog(self) -> None:
+            """Show update available dialog."""
+            msg_box = QMessageBox(self)
+            msg_box.setWindowTitle("Update Available")
+            msg_box.setText("A new version of Printerm is available!")
+            msg_box.setInformativeText("Would you like to update now?")
+            msg_box.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+            msg_box.setDefaultButton(QMessageBox.StandardButton.Yes)
+            msg_box.setIcon(QMessageBox.Icon.Information)
+
+            reply = msg_box.exec()
+            if reply == QMessageBox.StandardButton.Yes:
+                self.perform_update()
+
+        def perform_update(self) -> None:
+            """Perform the update by running the update command."""
+            try:
+                import subprocess
+                import sys
+
+                # Show progress message
+                QMessageBox.information(
+                    self, "Updating", "Updating Printerm to the latest version...\n\nThis may take a few moments."
+                )
+
+                # Check if we're in a virtual environment
+                in_venv = sys.prefix != sys.base_prefix
+
+                # Use pip with --user flag if not in venv
+                cmd = [sys.executable, "-m", "pip", "install", "--upgrade", "--quiet", "printerm"]
+                if not in_venv:
+                    cmd.insert(3, "--user")
+
+                # Run with timeout
+                result = subprocess.run(
+                    cmd,
+                    capture_output=True,
+                    text=True,
+                    timeout=300,  # 5 minute timeout
+                    check=False,
+                )
+
+                if result.returncode == 0:
+                    QMessageBox.information(
+                        self,
+                        "Update Complete",
+                        "Printerm has been successfully updated!\n\nPlease restart the application to use the new version.",
+                    )
+                else:
+                    error_msg = f"Failed to update Printerm (exit code: {result.returncode})"
+                    if result.stderr:
+                        error_msg += f"\n\nError: {result.stderr[:200]}..."  # Truncate long errors
+                    QMessageBox.critical(self, "Update Failed", error_msg)
+
+            except subprocess.TimeoutExpired:
+                QMessageBox.critical(self, "Update Failed", "Update timed out after 5 minutes")
+            except Exception as e:
+                QMessageBox.critical(self, "Update Error", f"An error occurred during update:\n\n{str(e)}")

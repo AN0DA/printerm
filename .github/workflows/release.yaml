@@ -157,10 +157,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Update __init__.py version
+      - name: Update pyproject.toml version
         env:
           NEW_VERSION: ${{ steps.release.outputs.new_release_version }}
-        run: sed -i "s/__version__ = .*/__version__ = \"$NEW_VERSION\"/" printerm/__init__.py
+        run: sed -i "s/^version = .*/version = \"$NEW_VERSION\"/" pyproject.toml
 
       - name: Upload artifacts
         if: steps.release.outputs.new_release_published == 'true'
@@ -168,9 +168,8 @@ jobs:
         with:
           name: release-artifacts
           path: |
-            printerm/__init__.py
-            CHANGELOG.md
             pyproject.toml
+            CHANGELOG.md
 
   Publish-to-PyPI:
     name: Publish to PyPI
@@ -231,7 +230,7 @@ jobs:
       - name: Commit and push changes
         run: |
           git checkout -b release/${{ needs.Semantic-release.outputs.new_release_version }}
-          git add CHANGELOG.md pyproject.toml printerm/__init__.py
+          git add CHANGELOG.md pyproject.toml
           git commit -m "chore: release ${{ needs.Semantic-release.outputs.new_release_version }}"
           git push origin release/${{ needs.Semantic-release.outputs.new_release_version }}
 
