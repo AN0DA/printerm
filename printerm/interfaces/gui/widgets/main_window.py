@@ -511,8 +511,26 @@ if PYQT_AVAILABLE:
 
         def perform_update(self) -> None:
             """Perform the update by running the update command."""
+            import os
             import subprocess  # nosec
             import sys
+
+            def is_running_via_pipx() -> bool:
+                """Check if the application is running via pipx."""
+                # Check if PIPX_HOME environment variable is set
+                if os.environ.get("PIPX_HOME"):
+                    return True
+                
+                # Check if executable path contains pipx
+                if "pipx" in sys.executable:
+                    return True
+                
+                # Check if we're in a pipx venv directory structure
+                pipx_home = os.path.expanduser("~/.local/pipx")
+                if pipx_home in sys.executable:
+                    return True
+                
+                return False
 
             try:
                 # Show progress message
@@ -520,13 +538,17 @@ if PYQT_AVAILABLE:
                     self, "Updating", "Updating Printerm to the latest version...\n\nThis may take a few moments."
                 )
 
-                # Check if we're in a virtual environment
-                in_venv = sys.prefix != sys.base_prefix
+                # Check if we're running via pipx
+                if is_running_via_pipx():
+                    cmd = ["pipx", "update", "printerm"]
+                else:
+                    # Check if we're in a virtual environment
+                    in_venv = sys.prefix != sys.base_prefix
 
-                # Use pip with --user flag if not in venv
-                cmd = [sys.executable, "-m", "pip", "install", "--upgrade", "--quiet", "printerm"]
-                if not in_venv:
-                    cmd.insert(3, "--user")
+                    # Use pip with --user flag if not in venv
+                    cmd = [sys.executable, "-m", "pip", "install", "--upgrade", "--quiet", "printerm"]
+                    if not in_venv:
+                        cmd.insert(3, "--user")
 
                 # Run with timeout
                 result = subprocess.run(  # nosec
