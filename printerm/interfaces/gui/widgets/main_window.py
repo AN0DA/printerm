@@ -6,7 +6,13 @@ import logging
 from printerm.error_handling import ErrorHandler
 from printerm.exceptions import ConfigurationError
 from printerm.interfaces.gui.theme import ThemeManager
-from printerm.interfaces.gui.widgets.base import PYQT_AVAILABLE, config_service, gui_settings, printer_service, template_service
+from printerm.interfaces.gui.widgets.base import (
+    PYQT_AVAILABLE,
+    config_service,
+    gui_settings,
+    printer_service,
+    template_service,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -126,7 +132,9 @@ if PYQT_AVAILABLE:
                     if variables:
                         recent_btn.clicked.connect(lambda checked, name=template_name: self.open_template_dialog(name))
                     else:
-                        recent_btn.clicked.connect(lambda checked, name=template_name: self.print_template_directly(name))
+                        recent_btn.clicked.connect(
+                            lambda checked, name=template_name: self.print_template_directly(name)
+                        )
                     recent_layout.addWidget(recent_btn)
 
                 recent_layout.addStretch()
@@ -172,7 +180,9 @@ if PYQT_AVAILABLE:
                     info_layout = QVBoxLayout()
                     info_layout.setSpacing(2)
 
-                    name_label = QLabel(f"📄 {template.get('name', template_name.title()) if 'template' in locals() else template_name.title()}")
+                    name_label = QLabel(
+                        f"📄 {template.get('name', template_name.title()) if 'template' in locals() else template_name.title()}"
+                    )
                     name_label.setFont(QFont("Arial", 12, QFont.Weight.Bold))  # Increased from 11
                     info_layout.addWidget(name_label)
 
@@ -201,9 +211,13 @@ if PYQT_AVAILABLE:
                         }
                     """)
                     if variables:
-                        action_button.clicked.connect(lambda checked, name=template_name: self.open_template_dialog(name))
+                        action_button.clicked.connect(
+                            lambda checked, name=template_name: self.open_template_dialog(name)
+                        )
                     else:
-                        action_button.clicked.connect(lambda checked, name=template_name: self.print_template_directly(name))
+                        action_button.clicked.connect(
+                            lambda checked, name=template_name: self.print_template_directly(name)
+                        )
                     row_layout.addWidget(action_button)
 
                     template_row.setLayout(row_layout)
@@ -381,9 +395,14 @@ if PYQT_AVAILABLE:
 
         def open_template_dialog(self, template_name: str) -> None:
             try:
-                logger.debug(f"Opening template dialog for: {template_name}")
-                dialog = TemplateDialog(template_name, self)
-                dialog.exec()
+                while True:
+                    logger.debug(f"Opening template dialog for: {template_name}")
+                    dialog = TemplateDialog(template_name, self)
+                    dialog.exec()
+
+                    if not dialog.should_reopen:
+                        break
+                    # If should reopen, continue the loop to open dialog again
 
                 # Refresh recent templates after printing
                 recent_templates = gui_settings.get_recent_templates()
@@ -408,7 +427,7 @@ if PYQT_AVAILABLE:
                     self,
                     "Confirmation",
                     f"Do you want to print '{display_name}'?",
-                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 )
                 if reply != QMessageBox.StandardButton.Yes:
                     return
@@ -422,7 +441,19 @@ if PYQT_AVAILABLE:
                 gui_settings.add_recent_template(template_name)
 
                 logger.info(f"Successfully printed template: {template_name}")
-                QMessageBox.information(self, "✓ Success", f"Successfully printed '{display_name}' template!")
+
+                # Success message with option to print again
+                msg_box = QMessageBox(self)
+                msg_box.setWindowTitle("✓ Success")
+                msg_box.setText(f"Successfully printed '{display_name}' template!")
+                msg_box.setStandardButtons(QMessageBox.StandardButton.Ok)
+                print_again_button = msg_box.addButton("Print Again", QMessageBox.ButtonRole.ActionRole)
+                msg_box.exec()
+
+                if msg_box.clickedButton() == print_again_button:
+                    # Print the same template again
+                    self.print_template_directly(template_name)
+                    return  # Don't refresh UI again since print_template_directly will handle it
 
                 # Refresh recent templates
                 self.refresh_templates_tab()

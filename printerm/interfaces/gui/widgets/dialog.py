@@ -41,6 +41,7 @@ if PYQT_AVAILABLE:
             self.template_service = template_service
             self.inputs: dict[str, Any] = {}
             self.current_theme = ThemeManager.get_current_theme()
+            self.should_reopen = False  # Flag to indicate if dialog should be reopened after printing
 
             # Get template to set proper title
             try:
@@ -243,7 +244,22 @@ if PYQT_AVAILABLE:
                     display_name = template.get("name", self.template_name)
                 except Exception:
                     display_name = self.template_name
-                QMessageBox.information(self, "✓ Success", f"Successfully printed '{display_name}' template!")
+
+                # Success message with option to print again
+                msg_box = QMessageBox(self)
+                msg_box.setWindowTitle("✓ Success")
+                msg_box.setText(f"Successfully printed '{display_name}' template!")
+                msg_box.setStandardButtons(QMessageBox.StandardButton.Ok)
+                print_again_button = msg_box.addButton("Print Again", QMessageBox.ButtonRole.ActionRole)
+                msg_box.exec()
+
+                if msg_box.clickedButton() == print_again_button:
+                    # Set flag to reopen dialog
+                    self.should_reopen = True
+                else:
+                    # Close dialog normally
+                    self.should_reopen = False
+
                 self.accept()
             except PrintermError as e:
                 ErrorHandler.handle_error(e, f"Error printing template '{self.template_name}'")
