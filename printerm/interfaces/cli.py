@@ -13,6 +13,7 @@ from printerm.error_handling import ErrorHandler
 from printerm.exceptions import ConfigurationError, PrintermError
 from printerm.services import service_container
 from printerm.services.interfaces import ConfigService, PrinterService, TemplateService, UpdateService
+from printerm.utils import is_running_via_pipx
 
 logging.basicConfig(
     level=logging.INFO,
@@ -461,23 +462,28 @@ def perform_update() -> None:
     try:
         typer.echo("⬆️  Updating the application...")
 
-        # Check if we're in a virtual environment
-        in_venv = sys.prefix != sys.base_prefix
-        if in_venv:
-            typer.echo("📦 Detected virtual environment - updating via pip")
+        # Check if we're running via pipx
+        if is_running_via_pipx():
+            typer.echo("📦 Detected pipx installation - updating via pipx")
+            cmd = ["pipx", "update", "printerm"]
         else:
-            typer.echo("⚠️  Not in a virtual environment - update may require admin privileges")
+            # Check if we're in a virtual environment
+            in_venv = sys.prefix != sys.base_prefix
+            if in_venv:
+                typer.echo("📦 Detected virtual environment - updating via pip")
+            else:
+                typer.echo("⚠️  Not in a virtual environment - update may require admin privileges")
 
-        # Check for user permissions on pip executable
-        pip_path = sys.executable
-        if not os.access(pip_path, os.X_OK):
-            typer.echo("❌ Cannot execute Python interpreter")
-            sys.exit(1)
+            # Check for user permissions on pip executable
+            pip_path = sys.executable
+            if not os.access(pip_path, os.X_OK):
+                typer.echo("❌ Cannot execute Python interpreter")
+                sys.exit(1)
 
-        # Use pip with --user flag if not in venv to avoid permission issues
-        cmd = [sys.executable, "-m", "pip", "install", "--upgrade", "--quiet", "printerm"]
-        if not in_venv:
-            cmd.insert(3, "--user")
+            # Use pip with --user flag if not in venv to avoid permission issues
+            cmd = [sys.executable, "-m", "pip", "install", "--upgrade", "--quiet", "printerm"]
+            if not in_venv:
+                cmd.insert(3, "--user")
 
         typer.echo(f"Running: {' '.join(cmd)}")
 

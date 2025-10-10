@@ -16,6 +16,7 @@ from printerm.interfaces.gui.widgets.base import (
     template_service,
     update_service,
 )
+from printerm.utils import is_running_via_pipx
 
 logger = logging.getLogger(__name__)
 
@@ -520,13 +521,17 @@ if PYQT_AVAILABLE:
                     self, "Updating", "Updating Printerm to the latest version...\n\nThis may take a few moments."
                 )
 
-                # Check if we're in a virtual environment
-                in_venv = sys.prefix != sys.base_prefix
+                # Check if we're running via pipx
+                if is_running_via_pipx():
+                    cmd = ["pipx", "update", "printerm"]
+                else:
+                    # Check if we're in a virtual environment
+                    in_venv = sys.prefix != sys.base_prefix
 
-                # Use pip with --user flag if not in venv
-                cmd = [sys.executable, "-m", "pip", "install", "--upgrade", "--quiet", "printerm"]
-                if not in_venv:
-                    cmd.insert(3, "--user")
+                    # Use pip with --user flag if not in venv
+                    cmd = [sys.executable, "-m", "pip", "install", "--upgrade", "--quiet", "printerm"]
+                    if not in_venv:
+                        cmd.insert(3, "--user")
 
                 # Run with timeout
                 result = subprocess.run(  # nosec

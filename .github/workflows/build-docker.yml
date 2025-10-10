@@ -1,26 +1,8 @@
 name: Build and Push Docker Image
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'printerm/**'
-      - 'pyproject.toml'
-      - 'uv.lock'
-      - 'Dockerfile'
-      - '.github/workflows/build-docker.yml'
-  workflow_call:
-    inputs:
-      release_version:
-        description: 'Release version for tagging'
-        required: false
-        type: string
-      is_release:
-        description: 'Whether this is a release build'
-        required: false
-        type: boolean
-        default: false
+  release:
+    types: [created]
   workflow_dispatch:
     inputs:
       tag:
@@ -66,11 +48,9 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            # For main branch pushes - tag as 'main'  
-            type=raw,value=main,enable=${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-            # For releases - version tag and latest
-            type=raw,value=${{ inputs.release_version }},enable=${{ inputs.is_release && inputs.release_version != '' }}
-            type=raw,value=latest,enable=${{ inputs.is_release }}
+            # For releases - tag with release tag and latest
+            type=ref,event=tag
+            type=raw,value=latest,enable=${{ github.event_name == 'release' }}
             # For manual dispatch - use custom tag
             type=raw,value=${{ inputs.tag }},enable=${{ github.event_name == 'workflow_dispatch' }}
           labels: |
@@ -94,7 +74,7 @@ jobs:
         if: ${{ github.event_name != 'workflow_dispatch' || inputs.push_to_registry }}
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event_name == 'workflow_dispatch' && inputs.tag || (inputs.is_release && 'latest' || 'main') }}
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event_name == 'release' && github.event.release.tag_name || inputs.tag }}
           format: 'sarif'
           output: 'trivy-results.sarif'
 
