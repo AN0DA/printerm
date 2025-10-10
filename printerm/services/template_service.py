@@ -115,39 +115,6 @@ class TemplateServiceImpl:
                 raise
             raise TemplateError(f"Failed to render template '{template_name}'", str(e)) from e
 
-    def _custom_wrap(self, parts: list[dict[str, Any]], chars_per_line: int) -> list[list[dict[str, Any]]]:
-        """Custom wrap a logical line with multiple styled parts, accounting for effective widths."""
-        physical_lines = []
-        current_line: list[dict[str, Any]] = []
-        current_pos = 0
-        for part in parts:
-            multiplier = 2 if part["styles"].get("double_width", False) else 1
-            # Split text into words for word-wrapping
-            words = part["text"].split()
-            for word_idx, word in enumerate(words):
-                word_len = len(word) * multiplier
-                # Check if adding this word would exceed the line
-                if current_pos + word_len > chars_per_line and current_line:
-                    physical_lines.append(current_line)
-                    current_line = []
-                    current_pos = 0
-                # Add the word as a part
-                new_part = {"text": word, "styles": part["styles"].copy()}
-                current_line.append(new_part)
-                current_pos += word_len
-                # Add space if not the last word in this part
-                if word_idx < len(words) - 1:
-                    space_len = multiplier
-                    if current_pos + space_len > chars_per_line:
-                        physical_lines.append(current_line)
-                        current_line = []
-                        current_pos = 0
-                    current_line[-1]["text"] += " "  # Append space to the word
-                    current_pos += space_len
-        if current_line:
-            physical_lines.append(current_line)
-        return physical_lines
-
     def generate_template_context(
         self, template_name: str, manual_context: dict[str, Any] | None = None, **script_kwargs: Any
     ) -> dict[str, Any]:

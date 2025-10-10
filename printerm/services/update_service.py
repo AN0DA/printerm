@@ -88,19 +88,19 @@ class UpdateServiceImpl:
 
     def check_for_updates_with_retry(self, current_version: str, max_retries: int = 2) -> bool:
         """Check for updates with retry logic for network failures."""
+        last_error = None
         for attempt in range(max_retries + 1):
             try:
                 return self.is_new_version_available(current_version)
             except NetworkError as e:
+                last_error = e
                 if attempt < max_retries:
                     logger.info(f"Update check failed (attempt {attempt + 1}/{max_retries + 1}), retrying: {e}")
                     # Clear cache to force fresh request on retry
                     self.clear_cache()
-                    continue
-                else:
-                    logger.error(f"Update check failed after {max_retries + 1} attempts: {e}")
-                    return False
-        return False  # This should never be reached, but satisfies type checker
+        # If we get here, all attempts failed
+        logger.error(f"Update check failed after {max_retries + 1} attempts: {last_error}")
+        return False
 
     def clear_cache(self) -> None:
         """Clear the version cache."""
