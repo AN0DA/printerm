@@ -138,12 +138,12 @@ def print_template(
         template = template_service.get_template(template_name)
 
         context = {}
-        template = template_service.get_template(template_name)
 
         # Check if template has a script
         if template_service.has_script(template_name):
             # Use script to generate context
             context = template_service.generate_template_context(template_name)
+        else:
             # Manual input for variables
             for var in template.get("variables", []):
                 if var.get("markdown", False):
