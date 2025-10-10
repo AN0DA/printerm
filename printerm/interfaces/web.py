@@ -257,14 +257,23 @@ def validate_template(template_name: str) -> Response:
             if var.get("required", False):
                 value = context.get(var["name"], "").strip()
                 if not value:
-                    missing_required.append(var["description"] or var["name"])
+                    missing_required.append(
+                        {
+                            "field": var["name"],
+                            "label": var.get("description") or var["name"],
+                        }
+                    )
         if missing_required:
             return jsonify(
-                {"valid": False, "errors": [f"Required field missing: {field}" for field in missing_required]}
+                {
+                    "valid": False,
+                    "errors": [f"Required field missing: {field['label']}" for field in missing_required],
+                    "invalid_fields": missing_required,
+                }
             )
-        return jsonify({"valid": True, "message": "Template validation successful"})
+        return jsonify({"valid": True, "message": "Template validation successful", "invalid_fields": []})
     except Exception as e:
-        response = jsonify({"valid": False, "errors": [f"Validation error: {str(e)}"]})
+        response = jsonify({"valid": False, "errors": [f"Validation error: {str(e)}"], "invalid_fields": []})
         response.status_code = 400
         return response
 

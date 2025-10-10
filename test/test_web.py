@@ -439,6 +439,7 @@ class TestWebInterface:
         data = response.get_json()
         assert data["valid"] is True
         assert "successful" in data["message"]
+        assert data["invalid_fields"] == []
 
     @patch("printerm.interfaces.web.template_service")
     def test_api_validate_template_missing_required(self, mock_service: MagicMock, client: FlaskClient) -> None:
@@ -462,6 +463,7 @@ class TestWebInterface:
         assert data["valid"] is False
         assert len(data["errors"]) == 1
         assert "Content" in data["errors"][0]
+        assert data["invalid_fields"] == [{"field": "content", "label": "Content"}]
 
     @patch("printerm.interfaces.web.template_service")
     def test_api_validate_template_error(self, mock_service: MagicMock, client: FlaskClient) -> None:
@@ -474,6 +476,7 @@ class TestWebInterface:
         data = response.get_json()
         assert data["valid"] is False
         assert "error" in data["errors"][0]
+        assert data["invalid_fields"] == []
 
     def test_api_theme_set_valid(self, client: FlaskClient) -> None:
         """Test setting valid theme."""
