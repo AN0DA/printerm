@@ -16,6 +16,7 @@ from printerm.interfaces.gui.widgets.base import (
     template_service,
     update_service,
 )
+from printerm.utils import is_running_via_pipx
 
 logger = logging.getLogger(__name__)
 
@@ -511,26 +512,8 @@ if PYQT_AVAILABLE:
 
         def perform_update(self) -> None:
             """Perform the update by running the update command."""
-            import os
             import subprocess  # nosec
             import sys
-
-            def is_running_via_pipx() -> bool:
-                """Check if the application is running via pipx."""
-                # Check if PIPX_HOME environment variable is set
-                if os.environ.get("PIPX_HOME"):
-                    return True
-                
-                # Check if executable path contains pipx
-                if "pipx" in sys.executable:
-                    return True
-                
-                # Check if we're in a pipx venv directory structure
-                pipx_home = os.path.expanduser("~/.local/pipx")
-                if pipx_home in sys.executable:
-                    return True
-                
-                return False
 
             try:
                 # Show progress message

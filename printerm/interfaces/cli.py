@@ -13,6 +13,7 @@ from printerm.error_handling import ErrorHandler
 from printerm.exceptions import ConfigurationError, PrintermError
 from printerm.services import service_container
 from printerm.services.interfaces import ConfigService, PrinterService, TemplateService, UpdateService
+from printerm.utils import is_running_via_pipx
 
 logging.basicConfig(
     level=logging.INFO,
@@ -450,24 +451,6 @@ def check_for_updates_on_startup() -> None:
                 typer.echo("You can update later by running 'printerm update' command.")
     except Exception as e:
         ErrorHandler.handle_error(e, "Error checking for updates")
-
-
-def is_running_via_pipx() -> bool:
-    """Check if the application is running via pipx."""
-    # Check if PIPX_HOME environment variable is set
-    if os.environ.get("PIPX_HOME"):
-        return True
-    
-    # Check if executable path contains pipx
-    if "pipx" in sys.executable:
-        return True
-    
-    # Check if we're in a pipx venv directory structure
-    pipx_home = os.path.expanduser("~/.local/pipx")
-    if pipx_home in sys.executable:
-        return True
-    
-    return False
 
 
 def perform_update() -> None:
