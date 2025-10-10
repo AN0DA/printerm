@@ -4,24 +4,35 @@ Welcome to the Thermal Printer Application! This project provides a flexible and
 
 ## Table of Contents
 
-- [Features](#features)
-- [Getting Started](#getting-started)
-  - [Installation](#installation)
-  - [Requirements](#requirements)
-- [Usage](#usage)
-  - [Command-Line Interface](#command-line-interface)
-  - [Graphical User Interface](#graphical-user-interface)
-  - [Web Application](#web-application)
-- [Configuration](#configuration)
-- [Templates](#templates)
-  - [Built-in Templates](#built-in-templates)
-  - [Adding New Templates](#adding-new-templates)
-- [Development](#development)
-  - [Setting Up the Development Environment](#setting-up-the-development-environment)
-  - [Running Tests](#running-tests)
-  - [Code Style and Formatting](#code-style-and-formatting)
-- [Contributing](#contributing)
-- [License](#license)
+- [Thermal Printer Application](#thermal-printer-application)
+  - [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [Getting Started](#getting-started)
+    - [Installation](#installation)
+      - [Requirements](#requirements)
+    - [Usage](#usage)
+      - [Command-Line Interface](#command-line-interface)
+        - [Printing a Template](#printing-a-template)
+        - [Updating Settings](#updating-settings)
+        - [Manual Update](#manual-update)
+      - [Graphical User Interface](#graphical-user-interface)
+      - [Web Application](#web-application)
+    - [Configuration](#configuration)
+      - [Configuration Options](#configuration-options)
+      - [Editing Configuration](#editing-configuration)
+        - [Through the CLI](#through-the-cli)
+        - [Manually](#manually)
+  - [Templates](#templates)
+    - [Built-in Templates](#built-in-templates)
+    - [Adding New Templates](#adding-new-templates)
+  - [Development](#development)
+    - [Setting Up the Development Environment](#setting-up-the-development-environment)
+    - [Running Tests](#running-tests)
+    - [Code Style and Formatting](#code-style-and-formatting)
+  - [Contributing](#contributing)
+    - [Guidelines](#guidelines)
+  - [License](#license)
+  - [Credits](#credits)
 
 ## Features
 
@@ -263,3 +274,7 @@ Permission is hereby granted, free of charge, to any person obtaining a copy
 This license is permissive, allowing others to use, modify, and distribute the software with minimal restrictions. It encourages collaboration and sharing while protecting your liability.
 
 See the [LICENSE] file for details.
+
+## Credits
+
+[Label Printer](https://icons8.com/icon/80267/label-printer) icon by [Icons8](https://icons8.com)

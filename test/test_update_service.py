@@ -32,7 +32,7 @@ class TestUpdateServiceImpl:
         version = service.get_latest_version()
 
         assert version == "2.0.0"
-        mock_get.assert_called_once_with(service.pypi_url, timeout=5)
+        mock_get.assert_called_once_with(service.pypi_url, timeout=10)
         mock_requests_response.json.assert_called_once()
 
     @patch("printerm.services.update_service.requests.get")
@@ -40,11 +40,14 @@ class TestUpdateServiceImpl:
         """Test error when HTTP request fails."""
         mock_response = MagicMock()
         mock_response.status_code = 404
+        http_error = requests.HTTPError("404 Client Error")
+        http_error.response = mock_response
+        mock_response.raise_for_status.side_effect = http_error
         mock_get.return_value = mock_response
 
         service = UpdateServiceImpl()
 
-        with pytest.raises(NetworkError, match="Failed to fetch latest version: HTTP 404"):
+        with pytest.raises(NetworkError, match="PyPI returned HTTP 404"):
             service.get_latest_version()
 
     @patch("printerm.services.update_service.requests.get")
@@ -54,7 +57,7 @@ class TestUpdateServiceImpl:
 
         service = UpdateServiceImpl()
 
-        with pytest.raises(NetworkError, match="Failed to fetch latest version from PyPI"):
+        with pytest.raises(NetworkError, match="Error while fetching latest version"):
             service.get_latest_version()
 
     @patch("printerm.services.update_service.requests.get")
@@ -64,7 +67,7 @@ class TestUpdateServiceImpl:
 
         service = UpdateServiceImpl()
 
-        with pytest.raises(NetworkError, match="Failed to fetch latest version from PyPI"):
+        with pytest.raises(NetworkError, match="Request to PyPI timed out"):
             service.get_latest_version()
 
     @patch("printerm.services.update_service.requests.get")
@@ -77,7 +80,7 @@ class TestUpdateServiceImpl:
 
         service = UpdateServiceImpl()
 
-        with pytest.raises(NetworkError, match="Error while fetching latest version"):
+        with pytest.raises(NetworkError, match="Invalid response from PyPI"):
             service.get_latest_version()
 
     @patch("printerm.services.update_service.requests.get")
@@ -183,7 +186,7 @@ class TestUpdateServiceImpl:
         service.get_latest_version()
 
         # Verify timeout parameter
-        mock_get.assert_called_once_with(service.pypi_url, timeout=5)
+        mock_get.assert_called_once_with(service.pypi_url, timeout=10)
 
     @patch("printerm.services.update_service.requests.get")
     def test_get_latest_version_response_structure(self, mock_get: MagicMock) -> None:

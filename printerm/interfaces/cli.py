@@ -138,7 +138,6 @@ def print_template(
         template = template_service.get_template(template_name)
 
         context = {}
-        template = template_service.get_template(template_name)
 
         # Check if template has a script
         if template_service.has_script(template_name):
@@ -148,7 +147,7 @@ def print_template(
             # Manual input for variables
             for var in template.get("variables", []):
                 if var.get("markdown", False):
-                    value = click.edit(var["description"], require_save=True)
+                    value = click.edit("", require_save=True)
                 else:
                     value = typer.prompt(var["description"])
                 context[var["name"]] = value
@@ -443,7 +442,7 @@ def launch_web(
 def check_for_updates_on_startup() -> None:
     """Check for updates on application startup."""
     try:
-        if config_service.get_check_for_updates() and update_service.is_new_version_available(__version__):
+        if config_service.get_check_for_updates() and update_service.check_for_updates_with_retry(__version__):
             update = typer.confirm("A new version is available. Do you want to update?")
             if update:
                 perform_update()
@@ -455,21 +454,62 @@ def check_for_updates_on_startup() -> None:
 
 def perform_update() -> None:
     """Update the application to the latest version from PyPI."""
+    import os
+    import subprocess  # nosec
+    import sys
+
     try:
-        cmd = [sys.executable, "-m", "pip", "install", "--upgrade", "printerm"]
         typer.echo("⬆️  Updating the application...")
 
-        # Check for user permissions
-        if not os.access(sys.executable, os.W_OK):
-            typer.echo("❌ You might not have permission to update the application.")
-            typer.echo("Please run the update command with administrative privileges.")
+        # Check if we're in a virtual environment
+        in_venv = sys.prefix != sys.base_prefix
+        if in_venv:
+            typer.echo("📦 Detected virtual environment - updating via pip")
+        else:
+            typer.echo("⚠️  Not in a virtual environment - update may require admin privileges")
+
+        # Check for user permissions on pip executable
+        pip_path = sys.executable
+        if not os.access(pip_path, os.X_OK):
+            typer.echo("❌ Cannot execute Python interpreter")
             sys.exit(1)
 
-        subprocess.check_call(cmd)  # nosec: B603
-        typer.echo("✅ Application updated successfully.")
-        sys.exit(0)
-    except subprocess.CalledProcessError as e:
-        typer.echo(f"❌ Failed to update application: {e}")
+        # Use pip with --user flag if not in venv to avoid permission issues
+        cmd = [sys.executable, "-m", "pip", "install", "--upgrade", "--quiet", "printerm"]
+        if not in_venv:
+            cmd.insert(3, "--user")
+
+        typer.echo(f"Running: {' '.join(cmd)}")
+
+        # Run with timeout and capture output
+        result = subprocess.run(  # nosec
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=300,  # 5 minute timeout
+            check=False,  # Don't raise exception immediately
+        )
+
+        if result.returncode == 0:
+            typer.echo("✅ Application updated successfully.")
+            typer.echo("💡 Please restart the application to use the new version.")
+            sys.exit(0)
+        else:
+            typer.echo(f"❌ Failed to update application (exit code: {result.returncode})")
+            if result.stdout:
+                typer.echo(f"Output: {result.stdout}")
+            if result.stderr:
+                typer.echo(f"Error: {result.stderr}")
+            sys.exit(1)
+
+    except subprocess.TimeoutExpired:
+        typer.echo("❌ Update timed out after 5 minutes")
+        sys.exit(1)
+    except FileNotFoundError:
+        typer.echo("❌ Python or pip not found")
+        sys.exit(1)
+    except Exception as e:
+        typer.echo(f"❌ Unexpected error during update: {e}")
         sys.exit(1)
 
 
