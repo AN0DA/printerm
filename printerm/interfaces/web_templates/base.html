@@ -29,7 +29,6 @@
             --card-background: {{ theme_styles['card-background'] }};
             --card-hover: {{ theme_styles['card-hover'] }};
             --input-background: {{ theme_styles['input-background'] }};
-            --preview-background: {{ theme_styles['preview-background'] }};
             --navbar-bg: {{ theme_styles['navbar-bg'] }};
             --navbar-brand: {{ theme_styles['navbar-brand'] }};
         }
@@ -106,18 +105,6 @@
             border-color: var(--warning);
             color: white;
         }
-        
-        .preview-container {
-            background-color: var(--preview-background);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-family: 'Courier New', monospace;
-            white-space: pre-wrap;
-            padding: 1rem;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        
         .template-card {
             transition: all 0.3s ease;
             cursor: pointer;
