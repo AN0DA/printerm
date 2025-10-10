@@ -168,8 +168,8 @@ class PrinterRenderer(MarkdownRenderer):
         """Render lists with proper nesting."""
         self.list_depth += 1
 
-        # Add spacing before list
-        if self.list_depth == 1:
+        # Only add spacing before top-level lists, and only if not already at the start
+        if self.list_depth == 1 and self.segments and self.segments[-1].get("text", "").strip():
             self.segments.append({"text": "\n", "styles": {}})
 
         # Process list items
@@ -180,7 +180,7 @@ class PrinterRenderer(MarkdownRenderer):
 
         self.list_depth -= 1
 
-        # Add spacing after list
+        # Add spacing after top-level lists
         if self.list_depth == 0:
             self.segments.append({"text": "\n", "styles": {}})
 

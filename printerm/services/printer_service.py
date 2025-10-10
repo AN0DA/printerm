@@ -46,19 +46,30 @@ class PrinterServiceImpl:
         try:
             for segment in segments:
                 text = segment["text"]
-                styles = segment.get("styles", {})
-                logger.debug("Printing segment: %s with styles: %s", text, styles)
+                styles = segment.get("styles", {}).copy()
 
-                self._printer.set_with_default(
-                    align=styles.get("align", "left"),
-                    font=styles.get("font", "a"),
-                    bold=styles.get("bold", False),
-                    underline=styles.get("underline", False),
-                    invert=styles.get("italic", False),
-                    double_width=styles.get("double_width", False),
-                    double_height=styles.get("double_height", False),
-                )
+                # Map italic to invert for printer compatibility
+                if styles.get("italic", False):
+                    styles["invert"] = True
+                    del styles["italic"]
+
+                # Set default values for missing style keys
+                default_styles = {
+                    "align": "left",
+                    "font": "a",
+                    "bold": False,
+                    "underline": False,
+                    "invert": False,
+                    "double_width": False,
+                    "double_height": False,
+                }
+                for key, default_value in default_styles.items():
+                    if key not in styles:
+                        styles[key] = default_value
+
+                self._printer.set_with_default(**styles)
                 self._printer.text(text)
+                self._printer.ln()
 
             # Reset styles
             self._printer.set(
@@ -78,7 +89,6 @@ class PrinterServiceImpl:
         """Render and print a template."""
         if not self._printer:
             raise PrinterError("Printer connection is not open")
-
         try:
             segments = self.template_service.render_template(template_name, context)
             self.print_segments(segments)
