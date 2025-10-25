@@ -1,3 +1,11 @@
+## [1.3.1](https://github.com/AN0DA/printerm/compare/v1.3.0...v1.3.1) (2025-10-10)
+
+
+### Bug Fixes
+
+* **update:** enhance update process to support pipx installations ([b1ad448](https://github.com/AN0DA/printerm/commit/b1ad4486d136510ace6590f08b3b5d381fc611dc))
+* **workflows:** streamline Docker build process and release triggers ([29f3079](https://github.com/AN0DA/printerm/commit/29f3079e761dc239bfcf028cbd2ddd611161c0eb))
+
 # [1.3.0](https://github.com/AN0DA/printerm/compare/v1.2.0...v1.3.0) (2025-10-10)
 
 

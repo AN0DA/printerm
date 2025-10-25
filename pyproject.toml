@@ -1,6 +1,6 @@
 [project]
 name = "printerm"
-version = "1.3.0"
+version = "1.3.1"
 description = "Thermal printer printing tool"
 readme = "README.md"
 authors = [{name = "Mikołaj Kaczmarek", email = "12432719+AN0DA@users.noreply.github.com"}]
